@@ -47,6 +47,17 @@ INSTALLED_APPS = [
 # Use our custom User model (must be set before the first migrate)
 AUTH_USER_MODEL = 'accounts.User'
 
+# REST API: every endpoint needs a JWT token unless the view says otherwise
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',  # for the browsable API
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
