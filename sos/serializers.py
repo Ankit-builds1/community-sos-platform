@@ -31,6 +31,8 @@ class IncidentSerializer(serializers.ModelSerializer):
         model = Incident
         fields = ["id", "resident", "resident_username", "society", "flat", "category",
                   "message", "latitude", "longitude", "status", "severity",
+                  "guardian_summary", "triage_confidence", "triage_source",
+                  "injection_suspected", "triaged_at",
                   "escalation_level", "needs_human_review", "assigned_responder",
                   "created_at", "resolved_at",
                   "alerts"]

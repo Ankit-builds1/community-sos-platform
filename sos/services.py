@@ -35,6 +35,10 @@ def raise_sos(resident, *, category="other", message="", latitude=None, longitud
     Alert.objects.bulk_create(alerts)
     for alert in incident.alerts.all():
         send_alert(alert)
+
+    # AI triage runs only AFTER the alerts are saved and sent - it can never delay them
+    from triage.service import triage_in_background
+    transaction.on_commit(lambda: triage_in_background(incident.pk))
     return incident
 
 
@@ -131,8 +135,11 @@ def resolve_incident(incident, user):
 MAX_LEVEL = 3
 
 
-def escalation_timeout():
-    return timedelta(seconds=getattr(settings, "SOS_ESCALATION_TIMEOUT_SECONDS", 120))
+def escalation_timeout(severity=""):
+    """Critical incidents escalate faster. Not triaged yet = default timeout."""
+    base = getattr(settings, "SOS_ESCALATION_TIMEOUT_SECONDS", 120)
+    factor = {"critical": 0.25, "high": 0.5}.get(severity, 1.0)
+    return timedelta(seconds=base * factor)
 
 
 def build_alerts_for_level(incident, level):
@@ -186,9 +193,10 @@ def escalate_incident(incident):
 def run_due_escalations():
     """Escalate every unanswered incident whose current level has timed out.
     Called by the `run_escalations` command now; by a Celery beat task later."""
-    cutoff = timezone.now() - escalation_timeout()
-    due = Incident.objects.filter(
+    now = timezone.now()
+    waiting = Incident.objects.filter(
         status__in=[Incident.Status.OPEN, Incident.Status.ESCALATED],
-        last_escalated_at__lte=cutoff,
+        last_escalated_at__lte=now - escalation_timeout("critical"),  # shortest timeout
     )
+    due = [i for i in waiting if i.last_escalated_at <= now - escalation_timeout(i.severity)]
     return sum(1 for incident in due if escalate_incident(incident))

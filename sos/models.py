@@ -39,6 +39,13 @@ class Incident(models.Model):
 
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.OPEN)
     severity = models.CharField(max_length=20, choices=Severity.choices, blank=True)
+
+    # filled by the AI triage agent (runs AFTER alerts are sent)
+    guardian_summary = models.CharField(max_length=255, blank=True)
+    triage_confidence = models.FloatField(null=True, blank=True)
+    triage_source = models.CharField(max_length=10, blank=True)  # "llm" or "rules"
+    injection_suspected = models.BooleanField(default=False)
+    triaged_at = models.DateTimeField(null=True, blank=True)
     escalation_level = models.PositiveSmallIntegerField(default=1)  # 1 = primary guardian
     last_escalated_at = models.DateTimeField(auto_now_add=True)  # when the current level began
     needs_human_review = models.BooleanField(default=False)  # max level reached, nobody came

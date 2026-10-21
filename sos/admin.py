@@ -11,8 +11,9 @@ class AlertInline(admin.TabularInline):
 
 @admin.register(Incident)
 class IncidentAdmin(admin.ModelAdmin):
-    list_display = ("id", "resident", "category", "severity", "status", "escalation_level",
-                    "needs_human_review", "assigned_responder", "society", "created_at")
+    list_display = ("id", "resident", "category", "severity", "triage_source", "status",
+                    "escalation_level", "needs_human_review", "injection_suspected",
+                    "assigned_responder", "created_at")
     list_filter = ("status", "needs_human_review", "category", "severity", "society")
     search_fields = ("resident__username", "message")
     inlines = [AlertInline]

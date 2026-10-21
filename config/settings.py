@@ -10,10 +10,20 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load secrets from .env (never committed)
+load_dotenv(BASE_DIR / ".env", override=True)  # override: pick up .env edits on reload
+
+# AI triage (LLM)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
 
 # Quick-start development settings - unsuitable for production
@@ -43,6 +53,7 @@ INSTALLED_APPS = [
     'accounts',
     'community',
     'sos',
+    'triage',
 ]
 
 # Use our custom User model (must be set before the first migrate)
