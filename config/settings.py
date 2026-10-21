@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     # local apps
     'accounts',
     'community',
+    'sos',
 ]
 
 # Use our custom User model (must be set before the first migrate)
