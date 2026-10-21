@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     # local apps
     'accounts',
+    'community',
 ]
 
 # Use our custom User model (must be set before the first migrate)
