@@ -2,7 +2,7 @@
 
 An SOS and emergency coordination platform for gated societies and apartments. A resident at home alone (an elderly parent, a child, a dependent) presses one button, and guardians, security staff and nearby volunteers are alerted instantly. If nobody responds in time, the alert escalates automatically.
 
-> 🚧 **Work in progress.** Built as a Python internship project, with an AI layer (LangGraph triage agent, RAG first-aid assistant, multilingual voice SOS) planned on top.
+> 🚧 **Work in progress.** A solo project: a production-style Django backend, with an AI layer (LangGraph triage agent, RAG first-aid assistant, multilingual voice SOS) planned on top.
 
 ## ✅ Features built so far
 

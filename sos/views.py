@@ -5,14 +5,18 @@ from rest_framework.response import Response
 
 from .models import Incident
 from .serializers import IncidentSerializer, RaiseSOSSerializer
-from .services import raise_sos
+from .services import (SOSActionError, accept_incident, decline_incident, raise_sos,
+                       resolve_incident)
 
 
 class IncidentViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    GET  /api/incidents/          incidents I raised or was alerted about
-    GET  /api/incidents/<id>/     one incident with its alerts
-    POST /api/incidents/raise/    the SOS button
+    GET  /api/incidents/               incidents I raised or was alerted about
+    GET  /api/incidents/<id>/          one incident with its alerts
+    POST /api/incidents/raise/         the SOS button
+    POST /api/incidents/<id>/accept/   I'm going to help
+    POST /api/incidents/<id>/decline/  I can't help
+    POST /api/incidents/<id>/resolve/  help given, incident over
     """
     serializer_class = IncidentSerializer
 
@@ -30,3 +34,23 @@ class IncidentViewSet(viewsets.ReadOnlyModelViewSet):
         data.is_valid(raise_exception=True)
         incident = raise_sos(request.user, **data.validated_data)
         return Response(IncidentSerializer(incident).data, status=status.HTTP_201_CREATED)
+
+    def _run(self, func, request):
+        try:
+            incident = func(self.get_object(), request.user)
+        except SOSActionError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        incident.refresh_from_db()
+        return Response(IncidentSerializer(incident).data)
+
+    @action(detail=True, methods=["post"])
+    def accept(self, request, pk=None):
+        return self._run(accept_incident, request)
+
+    @action(detail=True, methods=["post"])
+    def decline(self, request, pk=None):
+        return self._run(decline_incident, request)
+
+    @action(detail=True, methods=["post"])
+    def resolve(self, request, pk=None):
+        return self._run(resolve_incident, request)

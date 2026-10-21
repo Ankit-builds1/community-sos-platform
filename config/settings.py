@@ -48,6 +48,9 @@ INSTALLED_APPS = [
 # Use our custom User model (must be set before the first migrate)
 AUTH_USER_MODEL = 'accounts.User'
 
+# SOS: how long each escalation level waits for someone to accept (seconds)
+SOS_ESCALATION_TIMEOUT_SECONDS = 120
+
 # REST API: every endpoint needs a JWT token unless the view says otherwise
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

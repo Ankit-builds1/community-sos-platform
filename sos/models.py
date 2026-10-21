@@ -40,6 +40,8 @@ class Incident(models.Model):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.OPEN)
     severity = models.CharField(max_length=20, choices=Severity.choices, blank=True)
     escalation_level = models.PositiveSmallIntegerField(default=1)  # 1 = primary guardian
+    last_escalated_at = models.DateTimeField(auto_now_add=True)  # when the current level began
+    needs_human_review = models.BooleanField(default=False)  # max level reached, nobody came
     assigned_responder = models.ForeignKey(User, on_delete=models.SET_NULL, null=True,
                                            blank=True, related_name="assigned_incidents")
 
