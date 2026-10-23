@@ -84,6 +84,10 @@ def answer(question: str) -> dict:
         steps, used = _generate(question, relevant)
         status = "ok" if steps else "no_match"
         sources = [relevant[i - 1] for i in used if 1 <= i <= len(relevant)] or relevant[:1]
+        if not steps:  # the LLM found nothing it could ground an answer in
+            sources = []
+            steps = ["I don't have a guide for this situation. Stay with the person "
+                     "and follow the emergency operator's instructions."]
     except Exception as exc:  # no key, timeout, rate limit, bad JSON...
         logger.warning("First-aid LLM failed, using extractive answer: %s", exc)
         steps, sources, status = _extractive_answer(relevant[0]), relevant[:1], "extractive"
