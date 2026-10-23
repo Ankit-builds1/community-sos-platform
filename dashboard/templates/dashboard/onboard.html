@@ -1,0 +1,26 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Get started · Community SOS{% endblock %}
+{% block body %}
+{% include "dashboard/_nav.html" %}
+<div class="page">
+  <h1 style="font-size:24px">Welcome{% if user.first_name %}, {{ user.first_name }}{% endif %} 👋</h1>
+  <p class="muted">How are you connected to a society?</p>
+  <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+    <form class="card" method="get" action="{% url 'join' %}">
+      <h2>🔑 I have a join code</h2>
+      <p class="muted">Your society manager shared a 6-letter code or link.</p>
+      <input name="code" placeholder="e.g. K7QM2X" maxlength="12" required style="text-transform:uppercase">
+      <button class="btn btn-primary" style="margin-top:12px" type="submit">Continue</button>
+    </form>
+    <div class="card">
+      <h2>🏢 Register my society</h2>
+      <p class="muted">You become the Society Manager. Towers and flats are generated for you.</p>
+      <a class="btn btn-primary" href="{% url 'register_society' %}">Register a society</a>
+    </div>
+    <div class="card">
+      <h2>👨‍👩‍👧 I'm a guardian</h2>
+      <p class="muted">A family member sends you an invite link from their “My circle” page. Just open it while signed in.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

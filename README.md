@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # 🚨 Community SOS
 
@@ -14,7 +14,7 @@ One tap alerts guardians, security and neighbours in seconds. An AI agent triage
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![Celery](https://img.shields.io/badge/Celery-Redis-37814A?logo=celery&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-57_passing-3ecf8e)
+![Tests](https://img.shields.io/badge/tests-67_passing-3ecf8e)
 
 ![Live incident board](docs/screenshots/live-incident-fire.png)
 
@@ -222,7 +222,7 @@ python manage.py runserver
 
 | Command | Purpose |
 |---|---|
-| `python manage.py test` | Run all 57 tests |
+| `python manage.py test` | Run all 67 tests |
 | `python manage.py eval_triage --mode full --dataset holdout` | Triage evaluation |
 | `python manage.py eval_firstaid` | RAG retrieval evaluation (`--no-rewrite` for the ablation) |
 | `python manage.py seed_demo` | Demo society + one user per role |

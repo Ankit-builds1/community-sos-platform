@@ -33,6 +33,8 @@
     <input type="hidden" name="next" value="{{ next }}">
     <button class="btn btn-primary" style="width:100%;margin-top:20px" type="submit">Sign in</button>
 
+    <p class="muted" style="font-size:13px;margin-top:14px">New here? <a href="{% url 'signup' %}">Create an account</a>
+      or <a href="{% url 'landing' %}">try a private sandbox</a>.</p>
     <div class="demo">
       <div class="muted">Demo accounts (password <span class="mono">Demo@1234</span>), click to fill:</div>
       {% for username, role in demo_accounts %}

@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Guardian invite · Community SOS{% endblock %}
+{% block body %}
+{% include "dashboard/_nav.html" %}
+<div class="page" style="max-width:480px">
+  <div class="card">
+    {% if not inv %}
+      <h2>Invite not valid</h2><p class="muted">This link was already used or revoked.</p>
+    {% else %}
+      <h2>👨‍👩‍👧 Become a guardian</h2>
+      <p><strong>{{ inv.resident.first_name|default:inv.resident.username }}</strong> wants you as their
+        {% if inv.relation %}<strong>{{ inv.relation }}</strong>, {% endif %}priority <span class="chip">P{{ inv.priority }}</span> guardian.
+        You'll be alerted when they press SOS.</p>
+      {% if user.is_authenticated %}
+        <form method="post">{% csrf_token %}<button class="btn btn-primary" type="submit">Accept as {{ user.username }}</button></form>
+      {% else %}
+        <a class="btn btn-primary" href="{% url 'signup' %}?next={{ request.path|urlencode }}">Create account to accept</a>
+        <a class="btn" href="{% url 'login' %}?next={{ request.path|urlencode }}">Sign in</a>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

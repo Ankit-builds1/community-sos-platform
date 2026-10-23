@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Register society · Community SOS{% endblock %}
+{% block body %}
+{% include "dashboard/_nav.html" %}
+<div class="page" style="max-width:640px">
+  <form class="card" method="post">{% csrf_token %}
+    <h2>🏢 Register your society</h2>
+    <p class="muted" style="margin:0">Towers are named Block A, B, C… and flats 101, 102… 201… are created automatically.</p>
+    <label for="name">Society name</label><input id="name" name="name" required maxlength="150" placeholder="Green Valley Apartments">
+    <label for="address">Address</label><input id="address" name="address" maxlength="300">
+    <label for="city">City</label><input id="city" name="city" maxlength="80">
+    <div class="cols">
+      <div><label for="towers">Towers (1-10)</label><input id="towers" name="towers" type="number" min="1" max="10" value="2"></div>
+      <div><label for="floors">Floors (1-40)</label><input id="floors" name="floors" type="number" min="1" max="40" value="4"></div>
+      <div><label for="flats">Flats per floor (1-12)</label><input id="flats" name="flats" type="number" min="1" max="12" value="4"></div>
+    </div>
+    <p class="muted" id="preview" style="font-size:13px"></p>
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    <button class="btn btn-primary" style="margin-top:12px" type="submit">Create society</button>
+  </form>
+</div>
+<script>
+  const f = id => Math.max(1, Number(document.getElementById(id).value) || 1);
+  function upd() { document.getElementById("preview").textContent =
+    `${f("towers") * f("floors") * f("flats")} flats will be created.`; }
+  ["towers", "floors", "flats"].forEach(id => document.getElementById(id).addEventListener("input", upd)); upd();
+</script>
+{% endblock %}

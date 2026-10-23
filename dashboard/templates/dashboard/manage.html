@@ -1,0 +1,48 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Manage {{ society.name }} · Community SOS{% endblock %}
+{% block body %}
+{% include "dashboard/_nav.html" %}
+<div class="page">
+  <h1 style="font-size:24px;margin-bottom:4px">{{ society.name }}</h1>
+  <p class="muted" style="margin-top:0">{{ society.city }} · {{ flat_count }} flats · {{ members|length }} members
+    {% if society.is_sandbox %}· <span class="chip sev-medium">demo · expires {{ society.expires_at|timeuntil }}</span>{% endif %}
+    {% if society.status == "pending" %}· <span class="chip sev-high">waiting for admin approval</span>{% endif %}</p>
+
+  <div class="card">
+    <h2>Join code</h2>
+    {% if society.status == "approved" %}
+    <div class="code">{{ society.join_code }}</div>
+    <p class="muted">Share this code, or the link below, in your society group.</p>
+    <div class="copy"><input readonly value="{{ join_url }}" id="joinurl">
+      <button class="btn" type="button" onclick="navigator.clipboard.writeText(document.getElementById('joinurl').value);this.textContent='Copied ✓'">Copy</button></div>
+    {% else %}<p class="muted">The code becomes active once an admin approves the society.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Pending requests ({{ pending|length }})</h2>
+    {% if pending %}
+    <table><tr><th>User</th><th>Role</th><th>Flat</th><th>Note</th><th></th></tr>
+      {% for r in pending %}
+      <tr><td><strong>{{ r.user.first_name|default:r.user.username }}</strong><br><span class="muted mono" style="font-size:12px">{{ r.user.username }}</span></td>
+        <td>{{ r.get_role_display }}</td><td>{% if r.flat %}{{ r.flat.tower.name }} · {{ r.flat.number }}{% else %}–{% endif %}</td>
+        <td class="muted">{{ r.note|default:"–" }}</td>
+        <td style="white-space:nowrap">
+          <form method="post" action="{% url 'decide' r.id 'approve' %}" style="display:inline">{% csrf_token %}<button class="btn btn-ok">Approve</button></form>
+          <form method="post" action="{% url 'decide' r.id 'reject' %}" style="display:inline">{% csrf_token %}<button class="btn">Reject</button></form>
+        </td></tr>
+      {% endfor %}
+    </table>
+    {% else %}<p class="muted">No pending requests.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Members</h2>
+    <table><tr><th>Name</th><th>Role</th><th>Flat</th></tr>
+      {% for m in members %}
+      <tr><td>{{ m.user.first_name|default:m.user.username }}</td><td>{{ m.user.get_role_display }}</td>
+        <td>{% if m.flat %}{{ m.flat.tower.name }} · {{ m.flat.number }}{% else %}–{% endif %}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endblock %}

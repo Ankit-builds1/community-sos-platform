@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Create account · Community SOS{% endblock %}
+{% block body %}
+{% include "dashboard/_nav.html" %}
+<div class="page" style="max-width:460px">
+  <form class="card" method="post">{% csrf_token %}
+    <h2>Create your account</h2>
+    <p class="muted" style="margin:0">Then register your society or join one with a code.</p>
+    <label for="name">Your name</label><input id="name" name="name" maxlength="150" autofocus>
+    <label for="username">Username</label><input id="username" name="username" required maxlength="150" autocomplete="username">
+    <label for="password">Password (8+ characters)</label>
+    <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password">
+    <input type="hidden" name="next" value="{{ next }}">
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    <button class="btn btn-primary" style="width:100%;margin-top:18px" type="submit">Create account</button>
+    {% if demo_mode %}<p class="muted" style="font-size:12px">Public demo: accounts are deleted after 24 hours.</p>{% endif %}
+    <p class="muted" style="font-size:13px">Already have one? <a href="{% url 'login' %}">Sign in</a></p>
+  </form>
+</div>
+{% endblock %}

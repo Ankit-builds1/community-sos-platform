@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Join a society · Community SOS{% endblock %}
+{% block body %}
+{% include "dashboard/_nav.html" %}
+<div class="page" style="max-width:560px">
+  {% if not society %}
+  <form class="card" method="get" action="{% url 'join' %}">
+    <h2>🔑 Join with a code</h2>
+    <input name="code" value="{{ code }}" placeholder="6-letter code" required style="text-transform:uppercase">
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    <button class="btn btn-primary" style="margin-top:12px" type="submit">Find society</button>
+  </form>
+  {% else %}
+  <form class="card" method="post" action="{% url 'join' %}">{% csrf_token %}
+    <input type="hidden" name="code" value="{{ code }}">
+    <h2>Join {{ society.name }}</h2>
+    <p class="muted" style="margin:0">{{ society.city }} · the manager will approve your request.</p>
+    <label for="role">I am a</label>
+    <select id="role" name="role">{% for v, l in roles %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+    <div id="flat-box"><label for="flat">My flat</label>
+      <select id="flat" name="flat"><option value="">Select…</option>
+        {% for f in flats %}<option value="{{ f.id }}">{{ f.tower.name }} · Flat {{ f.number }}</option>{% endfor %}
+      </select></div>
+    <label for="note">Note for the manager (optional)</label><input id="note" name="note" maxlength="200" placeholder="Owner since 2019">
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    <button class="btn btn-primary" style="margin-top:16px" type="submit">Send request</button>
+  </form>
+  <script>
+    const role = document.getElementById("role"), box = document.getElementById("flat-box");
+    const upd = () => box.style.display = role.value === "resident" ? "" : "none";
+    role.addEventListener("change", upd); upd();
+  </script>
+  {% endif %}
+</div>
+{% endblock %}

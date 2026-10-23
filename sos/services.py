@@ -115,7 +115,7 @@ def decline_incident(incident, user):
 def resolve_incident(incident, user):
     """The assigned responder, security, the resident themself or an admin marks it resolved."""
     allowed = (user == incident.assigned_responder or user == incident.resident
-               or user.role == User.Role.SECURITY or user.is_staff)
+               or user.role in (User.Role.SECURITY, User.Role.MANAGER) or user.is_staff)
     if not allowed:
         raise SOSActionError("You cannot resolve this incident.")
     if incident.status in (Incident.Status.RESOLVED, Incident.Status.CLOSED):

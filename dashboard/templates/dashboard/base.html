@@ -37,6 +37,37 @@
     .sev-critical { color: var(--critical); } .sev-high { color: var(--high); }
     .sev-medium { color: var(--medium); } .sev-low { color: var(--low); }
     .sev-pending { color: var(--muted); }
+    /* shared layout */
+    .nav { display: flex; align-items: center; justify-content: space-between; gap: 16px;
+           padding: 12px 24px; border-bottom: 1px solid var(--line); background: var(--panel);
+           position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+    .nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; color: var(--text); }
+    .nav .links { display: flex; gap: 4px; flex-wrap: wrap; }
+    .nav .links a { color: var(--muted); padding: 6px 10px; border-radius: 8px; font-weight: 500; }
+    .nav .links a:hover, .nav .links a.on { color: var(--text); background: var(--panel-2); }
+    .nav .who { display: flex; align-items: center; gap: 12px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent);
+           box-shadow: 0 0 0 6px rgba(255,77,79,.18); display: inline-block; }
+    .switcher { background: rgba(78,161,255,.08); border-bottom: 1px solid #1f3a5c;
+                padding: 8px 24px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+    .switcher form { margin: 0; }
+    .switcher button { background: transparent; border: 1px solid var(--line); color: var(--text);
+                       border-radius: 999px; padding: 3px 12px; cursor: pointer; font: inherit; }
+    .switcher button.on { background: var(--info); border-color: var(--info); color: #04121f; font-weight: 600; }
+    .page { max-width: 960px; margin: 0 auto; padding: 28px 24px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; margin-bottom: 18px; }
+    .card h2 { margin: 0 0 6px; font-size: 18px; }
+    label { display: block; margin: 14px 0 6px; color: var(--muted); font-size: 13px; }
+    .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+    .msgs { max-width: 1400px; margin: 14px auto 0; padding: 0 24px; }
+    .msg-flash { padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--line); background: var(--panel-2); }
+    .msg-flash.success { border-color: var(--low); } .msg-flash.error { border-color: var(--critical); }
+    .error { margin-top: 14px; padding: 10px 12px; border-radius: 8px; background: rgba(255,77,79,.12); color: #ffb3b4; }
+    table { width: 100%; border-collapse: collapse; } td, th { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+    .code { font-family: "JetBrains Mono", monospace; font-size: 28px; letter-spacing: .2em; color: var(--accent); }
+    .copy { display: flex; gap: 8px; } .copy input { font-family: "JetBrains Mono", monospace; font-size: 12px; }
+    @media (max-width: 700px) { .nav, .switcher { padding: 10px 16px; } .page { padding: 20px 16px; } }
   </style>
   {% block head %}{% endblock %}
 </head>

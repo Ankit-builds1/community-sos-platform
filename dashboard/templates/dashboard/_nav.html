@@ -1,0 +1,34 @@
+{% with p=request.path %}
+<nav class="nav">
+  <a class="brand" href="{% url 'landing' %}"><span class="dot"></span> Community SOS</a>
+  {% if user.is_authenticated %}
+  <div class="links">
+    <a href="{% url 'board' %}" class="{% if p == '/board/' %}on{% endif %}">Incident board</a>
+    <a href="{% url 'circle' %}" class="{% if p == '/circle/' %}on{% endif %}">My circle</a>
+    {% if user.role == "manager" %}<a href="{% url 'manage' %}" class="{% if p == '/manage/' %}on{% endif %}">Manage society</a>{% endif %}
+    {% if not user.residency and user.role != "manager" %}<a href="{% url 'onboard' %}" class="{% if p == '/start/' %}on{% endif %}">Join / add society</a>{% endif %}
+    {% if user.is_staff %}<a href="/admin/">Admin</a>{% endif %}
+  </div>
+  <div class="who">
+    <span><strong>{{ user.first_name|default:user.username }}</strong> <span class="muted">({{ user.get_role_display }})</span></span>
+    <form method="post" action="{% url 'logout' %}" style="margin:0">{% csrf_token %}
+      <button class="btn" type="submit">Log out</button></form>
+  </div>
+  {% else %}
+  <div class="who"><a href="{% url 'login' %}">Sign in</a>
+    <a class="btn btn-primary" href="{% url 'signup' %}">Create account</a></div>
+  {% endif %}
+</nav>
+{% if sandbox_roles %}
+<div class="switcher">
+  <span class="muted">🧪 Your sandbox · view as:</span>
+  {% for key, label, on in sandbox_roles %}
+    <form method="post" action="{% url 'sandbox_switch' key %}">{% csrf_token %}
+      <input type="hidden" name="next" value="{{ p }}">
+      <button class="{% if on %}on{% endif %}" type="submit">{{ label }}</button></form>
+  {% endfor %}
+  <span class="muted" style="margin-left:auto">auto-deleted after 24 h</span>
+</div>
+{% endif %}
+{% endwith %}
+{% if messages %}<div class="msgs">{% for m in messages %}<div class="msg-flash {{ m.tags }}">{{ m }}</div>{% endfor %}</div>{% endif %}

@@ -1,0 +1,57 @@
+{% extends "dashboard/base.html" %}
+{% block title %}My circle · Community SOS{% endblock %}
+{% block body %}
+{% include "dashboard/_nav.html" %}
+<div class="page">
+  <h1 style="font-size:24px">👨‍👩‍👧 My circle</h1>
+  <p class="muted">When you press SOS, your guardians are alerted in priority order (P1 first, then P2…). Emergency contacts are reached at the final escalation level.</p>
+
+  <div class="card">
+    <h2>My guardians</h2>
+    {% if guardians %}
+    <table><tr><th>Priority</th><th>Guardian</th><th>Relation</th><th></th></tr>
+      {% for g in guardians %}<tr><td><span class="chip">P{{ g.priority }}</span></td>
+        <td>{{ g.guardian.first_name|default:g.guardian.username }}</td><td class="muted">{{ g.relation|default:"–" }}</td>
+        <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="remove_guardian"><input type="hidden" name="id" value="{{ g.id }}"><button class="btn">Remove</button></form></td></tr>{% endfor %}
+    </table>
+    {% else %}<p class="muted">No guardians yet. Create an invite link below.</p>{% endif %}
+
+    <form method="post" class="cols" style="margin-top:16px;align-items:end">{% csrf_token %}
+      <input type="hidden" name="action" value="invite">
+      <div><label>Relation</label><input name="relation" maxlength="50" placeholder="Daughter"></div>
+      <div><label>Priority</label><input name="priority" type="number" min="1" max="9" value="{{ guardians|length|add:1 }}"></div>
+      <div><button class="btn btn-primary" type="submit">Create invite link</button></div>
+    </form>
+    {% for inv, url in invites %}
+    <div style="margin-top:12px"><div class="muted" style="font-size:12px">Unused invite · P{{ inv.priority }} {{ inv.relation }}</div>
+      <div class="copy"><input readonly value="{{ url }}" id="inv{{ inv.id }}">
+        <button class="btn" type="button" onclick="navigator.clipboard.writeText(document.getElementById('inv{{ inv.id }}').value);this.textContent='Copied ✓'">Copy</button>
+        <form method="post" style="margin:0">{% csrf_token %}<input type="hidden" name="action" value="revoke_invite"><input type="hidden" name="id" value="{{ inv.id }}"><button class="btn">Revoke</button></form></div></div>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h2>Emergency contacts</h2>
+    {% if contacts %}
+    <table><tr><th>Name</th><th>Phone</th><th>Relation</th><th></th></tr>
+      {% for c in contacts %}<tr><td>{{ c.name }}</td><td class="mono">{{ c.phone }}</td><td class="muted">{{ c.relation|default:"–" }}</td>
+        <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="remove_contact"><input type="hidden" name="id" value="{{ c.id }}"><button class="btn">Remove</button></form></td></tr>{% endfor %}
+    </table>
+    {% else %}<p class="muted">No emergency contacts yet.</p>{% endif %}
+    <form method="post" class="cols" style="margin-top:16px;align-items:end">{% csrf_token %}
+      <input type="hidden" name="action" value="contact">
+      <div><label>Name</label><input name="name" required maxlength="100"></div>
+      <div><label>Phone</label><input name="phone" required maxlength="15"></div>
+      <div><label>Relation</label><input name="relation" maxlength="50"></div>
+      <div><button class="btn btn-primary" type="submit">Add contact</button></div>
+    </form>
+  </div>
+
+  {% if wards %}
+  <div class="card">
+    <h2>I'm a guardian for</h2>
+    <table>{% for w in wards %}<tr><td>{{ w.resident.first_name|default:w.resident.username }}</td><td><span class="chip">P{{ w.priority }}</span></td><td class="muted">{{ w.relation }}</td></tr>{% endfor %}</table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

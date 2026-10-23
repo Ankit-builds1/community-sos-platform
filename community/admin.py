@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import EmergencyContact, Flat, GuardianLink, Residency, Society, Tower
+from .models import (EmergencyContact, Flat, GuardianInvite, GuardianLink, JoinRequest,
+                     Residency, Society, Tower)
 
 
 class TowerInline(admin.TabularInline):
@@ -15,9 +16,33 @@ class FlatInline(admin.TabularInline):
 
 @admin.register(Society)
 class SocietyAdmin(admin.ModelAdmin):
-    list_display = ("name", "city", "created_at")
-    search_fields = ("name", "city")
+    list_display = ("name", "city", "status", "join_code", "is_sandbox", "created_by", "created_at")
+    list_filter = ("status", "is_sandbox")
+    search_fields = ("name", "city", "join_code")
     inlines = [TowerInline]
+    actions = ["approve", "reject"]
+
+    @admin.action(description="Approve selected societies")
+    def approve(self, request, queryset):
+        for s in queryset:
+            s.status = Society.Status.APPROVED
+            s.save(update_fields=["status"])
+            s.ensure_join_code()
+
+    @admin.action(description="Reject selected societies")
+    def reject(self, request, queryset):
+        queryset.update(status=Society.Status.REJECTED)
+
+
+@admin.register(JoinRequest)
+class JoinRequestAdmin(admin.ModelAdmin):
+    list_display = ("user", "society", "role", "flat", "status", "created_at")
+    list_filter = ("status", "role")
+
+
+@admin.register(GuardianInvite)
+class GuardianInviteAdmin(admin.ModelAdmin):
+    list_display = ("resident", "priority", "relation", "accepted_by", "created_at")
 
 
 @admin.register(Tower)

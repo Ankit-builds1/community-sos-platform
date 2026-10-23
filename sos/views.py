@@ -33,8 +33,8 @@ class IncidentViewSet(viewsets.ReadOnlyModelViewSet):
             return qs
         visible = Q(resident=user) | Q(alerts__recipient=user)
         residency = getattr(user, "residency", None)
-        if user.role == User.Role.SECURITY and residency:
-            visible |= Q(society_id=residency.society_id)  # guards see their whole society
+        if user.role in (User.Role.SECURITY, User.Role.MANAGER) and residency:
+            visible |= Q(society_id=residency.society_id)  # guards/managers see their society
         return qs.filter(visible).distinct()
 
     @action(detail=False, methods=["post"], url_path="raise",

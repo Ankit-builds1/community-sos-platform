@@ -25,9 +25,12 @@ class DashboardTests(TestCase):
                                                flat=flat, message="help")
 
     def test_board_requires_login(self):
-        response = self.client.get("/")
+        response = self.client.get("/board/")
         self.assertEqual(response.status_code, 302)
         self.assertIn("/login/", response["Location"])
+
+    def test_landing_is_public(self):
+        self.assertContains(self.client.get("/"), "Try it now")
 
     def test_login_page_lists_demo_accounts(self):
         response = self.client.get("/login/")
@@ -35,7 +38,7 @@ class DashboardTests(TestCase):
 
     def test_board_renders_for_logged_in_user(self):
         self.client.force_login(self.resident)
-        response = self.client.get("/")
+        response = self.client.get("/board/")
         self.assertContains(response, "Incident board")
         self.assertContains(response, "Send SOS")  # residents get the SOS form
 

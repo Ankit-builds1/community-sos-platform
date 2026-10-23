@@ -65,17 +65,22 @@
 </style>
 {% endblock %}
 {% block body %}
-<header>
-  <div class="brand"><span class="live" title="Live: refreshes every 5 s"></span> Community SOS · Incident board</div>
-  <div class="who">
-    <span><strong>{{ user.username }}</strong> <span class="muted">({{ user.get_role_display }})</span></span>
-    {% if user.is_staff %}<a href="/admin/">Admin</a>{% endif %}
-    <form method="post" action="{% url 'logout' %}" style="margin:0">{% csrf_token %}
-      <button class="btn" type="submit">Log out</button></form>
-  </div>
-</header>
+{% include "dashboard/_nav.html" %}
 
 <main>
+  <div class="row" style="margin-bottom:14px">
+    <h1 style="margin:0;font-size:20px;display:flex;align-items:center;gap:10px">
+      <span class="live" title="Live: refreshes every 5 s"></span> Incident board</h1>
+    {% if user.residency %}<span class="muted">{{ user.residency.society.name }}{% if user.residency.flat %} · {{ user.residency.flat.tower.name }} · Flat {{ user.residency.flat.number }}{% endif %}</span>{% endif %}
+  </div>
+
+  {% if pending_join %}
+  <div class="card" style="padding:14px 18px">⏳ Your request to join <strong>{{ pending_join.society.name }}</strong> is waiting for the society manager.</div>
+  {% elif no_society %}
+  <div class="card" style="padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+    <span>You're not part of a society yet. Join one with a code, or register yours.</span>
+    <a class="btn btn-primary" href="{% url 'onboard' %}">Get started</a></div>
+  {% endif %}
   <div class="stats">
     <div class="stat"><div class="n" id="s-open">–</div><div class="l">Open / unanswered</div></div>
     <div class="stat"><div class="n sev-critical" id="s-critical">–</div><div class="l">Critical, not resolved</div></div>
@@ -195,7 +200,7 @@ function canAccept(i) {
 }
 function canResolve(i) {
   return ACTIVE.includes(i.status) && (i.assigned_responder_username === ME ||
-    i.resident_username === ME || ROLE === "security" || IS_STAFF);
+    i.resident_username === ME || ROLE === "security" || ROLE === "manager" || IS_STAFF);
 }
 </script>
 <script>

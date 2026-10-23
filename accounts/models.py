@@ -16,9 +16,13 @@ class User(AbstractUser):
         GUARDIAN = "guardian", "Guardian"
         VOLUNTEER = "volunteer", "Volunteer"
         SECURITY = "security", "Security Staff"
+        MANAGER = "manager", "Society Manager"   # RWA secretary: approves join requests
         ADMIN = "admin", "Admin"
 
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.RESIDENT)
+    # Sandbox / public-demo accounts are deleted automatically after expires_at
+    is_sandbox = models.BooleanField(default=False)
+    expires_at = models.DateTimeField(null=True, blank=True)
     phone = models.CharField(max_length=15, unique=True, null=True, blank=True)
     is_phone_verified = models.BooleanField(default=False)
 

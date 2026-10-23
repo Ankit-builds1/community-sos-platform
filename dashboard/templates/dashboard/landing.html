@@ -1,0 +1,87 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Community SOS · AI emergency response for gated communities{% endblock %}
+{% block head %}
+<style>
+  .hero { max-width: 1100px; margin: 0 auto; padding: 72px 24px 40px; display: grid;
+          grid-template-columns: 1.2fr 1fr; gap: 48px; align-items: center; }
+  .hero h1 { font-size: 46px; line-height: 1.1; margin: 0 0 16px; letter-spacing: -.02em; }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p.lead { font-size: 17px; color: var(--muted); margin: 0 0 28px; max-width: 540px; }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .cta .btn { padding: 12px 20px; font-size: 15px; }
+  .sos-demo { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+  .sos-btn { width: 150px; height: 150px; margin: 6px auto 18px; border-radius: 50%; display: grid; place-items: center;
+             background: radial-gradient(circle at 35% 30%, #ff7a7b, #d9282b); color: #fff; font-weight: 800; font-size: 28px;
+             box-shadow: 0 0 0 0 rgba(255,77,79,.5); animation: ring 2.2s infinite; }
+  @keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(255,77,79,.45); } 80%,100% { box-shadow: 0 0 0 28px rgba(255,77,79,0); } }
+  .flow { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+  .flow li { display: flex; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); }
+  .flow .t { color: var(--muted); font-family: "JetBrains Mono", monospace; min-width: 44px; }
+  .features { max-width: 1100px; margin: 0 auto; padding: 20px 24px 40px; display: grid;
+              grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .feature { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+  .feature h3 { margin: 8px 0 6px; font-size: 15px; } .feature p { margin: 0; color: var(--muted); }
+  .ico { font-size: 22px; }
+  .steps3 { max-width: 1100px; margin: 0 auto; padding: 10px 24px 60px; }
+  .steps3 h2 { font-size: 22px; } .steps3 ol { color: var(--muted); padding-left: 20px; } .steps3 li { margin-bottom: 8px; }
+  .steps3 strong { color: var(--text); }
+  footer { border-top: 1px solid var(--line); padding: 20px 24px; color: var(--muted); text-align: center; font-size: 13px; }
+  @media (max-width: 860px) { .hero { grid-template-columns: 1fr; padding-top: 40px; } .hero h1 { font-size: 34px; }
+                              .features { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+{% block body %}
+{% include "dashboard/_nav.html" %}
+<section class="hero">
+  <div>
+    <h1>One tap. The <em>right people</em>, in seconds.</h1>
+    <p class="lead">An AI-assisted SOS network for apartment societies. A resident presses SOS (in any language),
+      guardians, security and nearby volunteers are alerted instantly, an LLM triages severity,
+      and unanswered alerts escalate automatically.</p>
+    <div class="cta">
+      <form method="post" action="{% url 'sandbox_start' %}" style="margin:0">{% csrf_token %}
+        <button class="btn btn-primary" type="submit">⚡ Try it now: no sign-up</button></form>
+      <a class="btn" href="{% url 'signup' %}">🏢 Add your society</a>
+      <a href="{% url 'login' %}">Shared demo accounts →</a>
+    </div>
+    <p class="muted" style="font-size:13px;margin-top:14px">“Try it now” builds a private sandbox society just for you
+      (resident, 2 guardians, guard, volunteer, manager). Switch roles from the top bar. Deleted after 24 hours.</p>
+  </div>
+  <div class="sos-demo">
+    <div class="sos-btn">SOS</div>
+    <ul class="flow">
+      <li><span class="t">0s</span> Ravi (Flat 402): “papa gir gaye, saans nahi le rahe”</li>
+      <li><span class="t">0.1s</span> Alerts → daughter, security desk, 2 volunteers</li>
+      <li><span class="t">2s</span> 🤖 AI triage: <span class="chip sev-critical">critical</span> 99%</li>
+      <li><span class="t">3s</span> 🩺 CPR steps from the first-aid knowledge base</li>
+      <li><span class="t">30s</span> No answer? Escalate to the next guardian, then society-wide</li>
+    </ul>
+  </div>
+</section>
+
+<section class="features">
+  <div class="feature"><div class="ico">🤖</div><h3>LLM triage with guardrails</h3>
+    <p>LangGraph pipeline: rules baseline, LLM with schema validation, confidence fallback and a safety floor. Evaluated on a labelled set.</p></div>
+  <div class="feature"><div class="ico">🩺</div><h3>RAG first aid</h3>
+    <p>Multilingual retrieval over vetted first-aid guides with query rewriting, scope detection and a refusal policy for doses.</p></div>
+  <div class="feature"><div class="ico">⏱️</div><h3>Severity-aware escalation</h3>
+    <p>Critical incidents escalate 4× faster. Celery workers, Redis, row locks so only one responder “wins”.</p></div>
+  <div class="feature"><div class="ico">🏢</div><h3>Self-service societies</h3>
+    <p>Register a society, flats are generated, residents join with a 6-letter code and the manager approves.</p></div>
+  <div class="feature"><div class="ico">👨‍👩‍👧</div><h3>Guardian circle</h3>
+    <p>Residents invite family as guardians with a one-time link and set the alert order (P1, P2…).</p></div>
+  <div class="feature"><div class="ico">🛡️</div><h3>Built for production</h3>
+    <p>Docker, PostgreSQL, throttling, LLM budget caps, health checks and a cron fallback for free hosting.</p></div>
+</section>
+
+<section class="steps3">
+  <h2>Add your own building in 3 steps</h2>
+  <ol>
+    <li><strong>Create an account</strong> and register your society: name, number of towers, floors and flats per floor.</li>
+    <li><strong>Share the join code</strong> (or link) on your society WhatsApp group. Residents, guards and volunteers request to join.</li>
+    <li><strong>Approve requests</strong> from the manager page. Residents add their guardians from “My circle”. Done.</li>
+  </ol>
+  {% if demo_mode %}<p class="muted" style="font-size:13px">This is a public demo: new accounts and societies are temporary (24 h). No real emergency services are contacted.</p>{% endif %}
+</section>
+<footer>Community SOS · a portfolio project · not a replacement for 112 / emergency services</footer>
+{% endblock %}
