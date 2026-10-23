@@ -24,6 +24,8 @@ load_dotenv(BASE_DIR / ".env", override=True)  # override: pick up .env edits on
 # AI triage (LLM)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+# separate rate-limit quota; used automatically when the main model hits a 429
+GROQ_FALLBACK_MODEL = os.getenv("GROQ_FALLBACK_MODEL", "openai/gpt-oss-20b")
 
 
 # Quick-start development settings - unsuitable for production

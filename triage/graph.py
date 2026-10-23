@@ -67,9 +67,12 @@ def use_rules_node(state: TriageState) -> TriageState:
 
 def guardrail_node(state: TriageState) -> TriageState:
     llm, base = state["llm_result"], state["baseline"]
+    # The rules act as a floor only when they actually recognised something.
+    # Their "unknown -> high" default is for when the LLM is missing, not a veto on it.
+    floor = base.severity if base.matched else "low"
     final = llm.model_copy(update={
-        # AI may RAISE severity, never lower it below the rule-based baseline
-        "severity": rules.max_severity(llm.severity, base.severity),
+        # AI may RAISE severity, never lower it below the rule-based evidence
+        "severity": rules.max_severity(llm.severity, floor),
         # keep the user's own category choice if they picked one
         "category": state["category_hint"] if state["category_hint"] != "other"
                     else llm.category,

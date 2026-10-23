@@ -68,3 +68,39 @@ class TriageGraphTests(SimpleTestCase):
     def test_user_chosen_category_is_kept(self, _):
         final = run_triage("someone is outside my door", "security")["final"]
         self.assertEqual(final.category, "security")
+
+    @patch(LLM_PATH, return_value=fake_llm(category="other", severity="low", confidence=0.95))
+    def test_unknown_default_does_not_override_confident_llm(self, _):
+        # rules recognise nothing here -> their "high" default must not veto the LLM
+        final = run_triage("Accidentally pressed SOS, everything is fine", "other")["final"]
+        self.assertEqual(final.severity, "low")
+
+
+class BackupModelTests(SimpleTestCase):
+
+    def _rate_limit_error(self):
+        import httpx
+        from groq import RateLimitError
+        response = httpx.Response(429, request=httpx.Request("POST", "https://x"))
+        return RateLimitError("rate limited", response=response, body=None)
+
+    @patch("triage.llm.Groq")
+    def test_switches_to_backup_model_on_rate_limit(self, groq_cls):
+        from types import SimpleNamespace
+
+        from django.test import override_settings
+
+        from .llm import llm_triage
+
+        ok = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=(
+            '{"category": "fire", "severity": "critical", "confidence": 0.9, '
+            '"guardian_summary": "Fire reported.", "injection_suspected": false}')))])
+        create = groq_cls.return_value.chat.completions.create
+        create.side_effect = [self._rate_limit_error(), ok]
+
+        with override_settings(GROQ_API_KEY="test", GROQ_MODEL="main-model",
+                               GROQ_FALLBACK_MODEL="backup-model"):
+            result = llm_triage("kitchen on fire", "other")
+
+        self.assertEqual(result.model, "backup-model")
+        self.assertEqual(create.call_args_list[1].kwargs["model"], "backup-model")
