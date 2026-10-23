@@ -66,6 +66,21 @@ AUTH_USER_MODEL = 'accounts.User'
 # SOS: how long each escalation level waits for someone to accept (seconds)
 SOS_ESCALATION_TIMEOUT_SECONDS = 120
 
+# Celery (background + scheduled tasks) with Redis as the message broker.
+# Without REDIS_URL / with SOS_USE_CELERY=0, triage falls back to a background thread.
+CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6380/0")
+CELERY_RESULT_BACKEND = None          # we never read task results
+CELERY_TASK_ACKS_LATE = True          # a task is removed from the queue only after it finishes
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_BEAT_SCHEDULE = {
+    "check-escalations-every-10s": {
+        "task": "sos.tasks.run_escalations_task",
+        "schedule": 10.0,
+    },
+}
+SOS_USE_CELERY = os.getenv("SOS_USE_CELERY", "1") == "1"
+
 # REST API: every endpoint needs a JWT token unless the view says otherwise
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

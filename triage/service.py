@@ -39,10 +39,20 @@ def triage_incident(incident_id: int):
 
 
 def triage_in_background(incident_id: int):
-    """Run triage without making the SOS request wait. Replaced by Celery later."""
+    """Run triage without making the SOS request wait.
+    1. Celery task via Redis (survives restarts, retries, scales across workers).
+    2. If the queue is unreachable, a local thread, so triage still happens."""
     if not getattr(settings, "SOS_TRIAGE_ASYNC", True):
         triage_incident(incident_id)
         return
+
+    if getattr(settings, "SOS_USE_CELERY", False):
+        try:
+            from .tasks import triage_incident_task
+            triage_incident_task.apply_async(args=[incident_id], retry=False)
+            return
+        except Exception as exc:  # Redis down, broker misconfigured...
+            logger.warning("Celery unavailable (%s); running triage in a thread", exc)
 
     def worker():
         try:

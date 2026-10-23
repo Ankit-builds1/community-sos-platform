@@ -104,3 +104,29 @@ class BackupModelTests(SimpleTestCase):
 
         self.assertEqual(result.model, "backup-model")
         self.assertEqual(create.call_args_list[1].kwargs["model"], "backup-model")
+
+
+class BackgroundDispatchTests(SimpleTestCase):
+    """The triage hand-off must never lose an incident, even if Redis is down."""
+
+    @patch("triage.service.triage_incident")
+    @patch("triage.tasks.triage_incident_task.apply_async")
+    def test_uses_celery_when_available(self, apply_async, run_now):
+        from django.test import override_settings
+
+        from .service import triage_in_background
+        with override_settings(SOS_TRIAGE_ASYNC=True, SOS_USE_CELERY=True):
+            triage_in_background(42)
+        apply_async.assert_called_once_with(args=[42], retry=False)
+        run_now.assert_not_called()
+
+    @patch("triage.service.threading.Thread")
+    @patch("triage.tasks.triage_incident_task.apply_async",
+           side_effect=ConnectionError("redis down"))
+    def test_falls_back_to_thread_when_broker_is_down(self, _, thread_cls):
+        from django.test import override_settings
+
+        from .service import triage_in_background
+        with override_settings(SOS_TRIAGE_ASYNC=True, SOS_USE_CELERY=True):
+            triage_in_background(42)
+        thread_cls.return_value.start.assert_called_once()
