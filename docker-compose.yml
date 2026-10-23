@@ -1,0 +1,33 @@
+# Step 1: database + cache in containers. The Django app still runs from your venv.
+#   docker compose up -d      start (in the background)
+#   docker compose ps         check status
+#   docker compose down       stop (data is kept in the named volume)
+services:
+  db:
+    image: pgvector/pgvector:pg16      # PostgreSQL 16 with the pgvector extension (for RAG later)
+    environment:
+      POSTGRES_DB: sos
+      POSTGRES_USER: sos
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sos_dev_password}
+    ports:
+      - "5433:5432"                    # 5433 on your PC, so it never clashes with a local Postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sos -d sos"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine              # message broker for Celery (next step)
+    ports:
+      - "6380:6379"                    # 6380 on your PC, to avoid clashes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

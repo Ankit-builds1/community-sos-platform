@@ -39,7 +39,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--no-rewrite", action="store_true")
         parser.add_argument("--runs", type=int, default=1)
-        parser.add_argument("--sleep", type=float, default=1.0)
+        # ~600 tokens per rewrite; free tier allows 8,000 tokens/min -> keep <= 12 calls/min
+        parser.add_argument("--sleep", type=float, default=5.0)
 
     def handle(self, *args, no_rewrite, runs, sleep, **options):
         cases = [json.loads(l) for l in EVAL_FILE.read_text(encoding="utf-8").splitlines()
