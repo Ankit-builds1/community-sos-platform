@@ -64,4 +64,5 @@ class IncidentViewSet(viewsets.ReadOnlyModelViewSet):
 
         incident = self.get_object()
         query = incident.message or incident.guardian_summary or incident.category
-        return Response({"incident": incident.pk, "query": query, **answer(query)})
+        return Response({"incident": incident.pk, "query": query,
+                         **answer(query, is_sos=True)})

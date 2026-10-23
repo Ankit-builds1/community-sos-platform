@@ -91,3 +91,26 @@ class QueryRewriteTests(SimpleTestCase):
     def test_rewrite_failure_falls_back_to_original_text(self, _):
         from .assistant import rewrite_query
         self.assertEqual(rewrite_query("papa ko chhati mein dard"), "papa ko chhati mein dard")
+
+    @patch("firstaid.assistant.Groq")
+    def test_out_of_scope_question_returns_none(self, groq_cls):
+        from .assistant import rewrite_query
+        groq_cls.return_value.chat.completions.create.return_value = llm_reply('{"query": ""}')
+        self.assertIsNone(rewrite_query("Recommend a good restaurant nearby"))
+
+    @patch("firstaid.assistant.search", return_value=[{**CHUNK, "score": 0.1}])
+    @patch("firstaid.assistant.rewrite_query", return_value=None)
+    def test_out_of_scope_confirmed_by_raw_search_says_no_guide(self, *_):
+        result = answer("Recommend a good restaurant nearby")
+        self.assertEqual(result["status"], "no_match")
+
+    @patch("firstaid.assistant.Groq", side_effect=TimeoutError("down"))
+    @patch("firstaid.assistant.search", return_value=[{**CHUNK, "score": 0.2}])
+    @patch("firstaid.assistant.rewrite_query", return_value=None)
+    def test_sos_incident_is_never_dropped_as_out_of_scope(self, *_):
+        # even with a weak match, an SOS incident must still get guidance if any exists
+        result = answer("kie jane ghara bhitaraku pasuchi", is_sos=True)
+        self.assertEqual(result["status"], "no_match")  # 0.2 < MIN_SCORE: honest no-guide
+        with patch("firstaid.assistant.search", return_value=[CHUNK]):
+            result = answer("kie jane ghara bhitaraku pasuchi", is_sos=True)
+        self.assertEqual(result["status"], "extractive")  # searched and answered

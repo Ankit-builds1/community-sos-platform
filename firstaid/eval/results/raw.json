@@ -1,0 +1,478 @@
+[
+  {
+    "id": 1,
+    "lang": "en",
+    "question": "My dad has crushing pain in his chest and is sweating",
+    "gold": "chest_pain",
+    "query": "My dad has crushing pain in his chest and is sweating",
+    "retrieved": [
+      "chest_pain",
+      "choking",
+      "cpr_not_breathing"
+    ],
+    "scores": [
+      0.47,
+      0.394,
+      0.336
+    ]
+  },
+  {
+    "id": 2,
+    "lang": "en",
+    "question": "Neighbour collapsed, no pulse, not breathing",
+    "gold": "cpr_not_breathing",
+    "query": "Neighbour collapsed, no pulse, not breathing",
+    "retrieved": [
+      "cpr_not_breathing",
+      "unconscious_breathing",
+      "falls_head_injury"
+    ],
+    "scores": [
+      0.498,
+      0.487,
+      0.446
+    ]
+  },
+  {
+    "id": 3,
+    "lang": "en",
+    "question": "Toddler swallowed a coin and can't breathe",
+    "gold": "choking",
+    "query": "Toddler swallowed a coin and can't breathe",
+    "retrieved": [
+      "choking",
+      "poisoning",
+      "cpr_not_breathing"
+    ],
+    "scores": [
+      0.466,
+      0.394,
+      0.379
+    ]
+  },
+  {
+    "id": 4,
+    "lang": "en",
+    "question": "She passed out but is still breathing",
+    "gold": "unconscious_breathing",
+    "query": "She passed out but is still breathing",
+    "retrieved": [
+      "unconscious_breathing",
+      "cpr_not_breathing",
+      "falls_head_injury"
+    ],
+    "scores": [
+      0.499,
+      0.412,
+      0.34
+    ]
+  },
+  {
+    "id": 5,
+    "lang": "en",
+    "question": "His mouth is drooping on one side and words are slurred",
+    "gold": "stroke",
+    "query": "His mouth is drooping on one side and words are slurred",
+    "retrieved": [
+      "choking",
+      "allergic_reaction",
+      "stroke"
+    ],
+    "scores": [
+      0.552,
+      0.45,
+      0.319
+    ]
+  },
+  {
+    "id": 6,
+    "lang": "en",
+    "question": "Deep cut on my leg from broken glass, lots of blood",
+    "gold": "bleeding",
+    "query": "Deep cut on my leg from broken glass, lots of blood",
+    "retrieved": [
+      "bleeding",
+      "falls_head_injury",
+      "burns"
+    ],
+    "scores": [
+      0.629,
+      0.458,
+      0.413
+    ]
+  },
+  {
+    "id": 7,
+    "lang": "en",
+    "question": "Old lady tripped on the stairs, her hip is hurting badly",
+    "gold": "falls_head_injury",
+    "query": "Old lady tripped on the stairs, her hip is hurting badly",
+    "retrieved": [
+      "falls_head_injury",
+      "chest_pain",
+      "intruder_safety"
+    ],
+    "scores": [
+      0.486,
+      0.263,
+      0.225
+    ]
+  },
+  {
+    "id": 8,
+    "lang": "en",
+    "question": "My son is having convulsions",
+    "gold": "seizure",
+    "query": "My son is having convulsions",
+    "retrieved": [
+      "choking",
+      "chest_pain",
+      "seizure"
+    ],
+    "scores": [
+      0.46,
+      0.401,
+      0.379
+    ]
+  },
+  {
+    "id": 9,
+    "lang": "en",
+    "question": "Diabetic uncle is shaking and confused, missed lunch",
+    "gold": "low_blood_sugar",
+    "query": "Diabetic uncle is shaking and confused, missed lunch",
+    "retrieved": [
+      "low_blood_sugar",
+      "stroke",
+      "choking"
+    ],
+    "scores": [
+      0.553,
+      0.325,
+      0.284
+    ]
+  },
+  {
+    "id": 10,
+    "lang": "en",
+    "question": "Spilled boiling water on my arm",
+    "gold": "burns",
+    "query": "Spilled boiling water on my arm",
+    "retrieved": [
+      "bleeding",
+      "burns",
+      "poisoning"
+    ],
+    "scores": [
+      0.445,
+      0.381,
+      0.376
+    ]
+  },
+  {
+    "id": 11,
+    "lang": "en",
+    "question": "Kid drank some phenyl from the bathroom",
+    "gold": "poisoning",
+    "query": "Kid drank some phenyl from the bathroom",
+    "retrieved": [
+      "poisoning",
+      "stroke",
+      "seizure"
+    ],
+    "scores": [
+      0.416,
+      0.274,
+      0.24
+    ]
+  },
+  {
+    "id": 12,
+    "lang": "en",
+    "question": "Her lips are swelling after eating peanuts",
+    "gold": "allergic_reaction",
+    "query": "Her lips are swelling after eating peanuts",
+    "retrieved": [
+      "allergic_reaction",
+      "choking",
+      "stroke"
+    ],
+    "scores": [
+      0.438,
+      0.357,
+      0.354
+    ]
+  },
+  {
+    "id": 13,
+    "lang": "en",
+    "question": "I can smell LPG in the kitchen",
+    "gold": "fire_gas_leak",
+    "query": "I can smell LPG in the kitchen",
+    "retrieved": [
+      "fire_gas_leak",
+      "burns",
+      "choking"
+    ],
+    "scores": [
+      0.58,
+      0.271,
+      0.268
+    ]
+  },
+  {
+    "id": 14,
+    "lang": "en",
+    "question": "Someone is trying to force open my main door at night",
+    "gold": "intruder_safety",
+    "query": "Someone is trying to force open my main door at night",
+    "retrieved": [
+      "intruder_safety",
+      "fire_gas_leak",
+      "burns"
+    ],
+    "scores": [
+      0.518,
+      0.325,
+      0.237
+    ]
+  },
+  {
+    "id": 15,
+    "lang": "hinglish",
+    "question": "Dadaji ke seene mein dard hai aur pasina aa raha hai",
+    "gold": "chest_pain",
+    "query": "Dadaji ke seene mein dard hai aur pasina aa raha hai",
+    "retrieved": [
+      "choking",
+      "unconscious_breathing",
+      "intruder_safety"
+    ],
+    "scores": [
+      0.377,
+      0.173,
+      0.17
+    ]
+  },
+  {
+    "id": 16,
+    "lang": "hinglish",
+    "question": "Bachche ke gale mein sikka atak gaya",
+    "gold": "choking",
+    "query": "Bachche ke gale mein sikka atak gaya",
+    "retrieved": [
+      "choking",
+      "unconscious_breathing",
+      "intruder_safety"
+    ],
+    "scores": [
+      0.282,
+      0.175,
+      0.17
+    ]
+  },
+  {
+    "id": 17,
+    "lang": "hinglish",
+    "question": "Mummy behosh ho gayi par saans le rahi hai",
+    "gold": "unconscious_breathing",
+    "query": "Mummy behosh ho gayi par saans le rahi hai",
+    "retrieved": [
+      "choking",
+      "unconscious_breathing",
+      "intruder_safety"
+    ],
+    "scores": [
+      0.315,
+      0.159,
+      0.138
+    ]
+  },
+  {
+    "id": 18,
+    "lang": "hinglish",
+    "question": "Haath par garam tel gir gaya, jal gaya",
+    "gold": "burns",
+    "query": "Haath par garam tel gir gaya, jal gaya",
+    "retrieved": [
+      "bleeding",
+      "burns",
+      "poisoning"
+    ],
+    "scores": [
+      0.253,
+      0.243,
+      0.238
+    ]
+  },
+  {
+    "id": 19,
+    "lang": "hinglish",
+    "question": "Bhai ko daure pad rahe hain",
+    "gold": "seizure",
+    "query": "Bhai ko daure pad rahe hain",
+    "retrieved": [
+      "stroke",
+      "burns",
+      "choking"
+    ],
+    "scores": [
+      0.164,
+      0.112,
+      0.107
+    ]
+  },
+  {
+    "id": 20,
+    "lang": "hinglish",
+    "question": "Gas cylinder se leak ho raha hai",
+    "gold": "fire_gas_leak",
+    "query": "Gas cylinder se leak ho raha hai",
+    "retrieved": [
+      "fire_gas_leak",
+      "burns",
+      "choking"
+    ],
+    "scores": [
+      0.56,
+      0.222,
+      0.198
+    ]
+  },
+  {
+    "id": 21,
+    "lang": "hi",
+    "question": "दादी सीढ़ियों से गिर गईं, सिर से खून आ रहा है",
+    "gold": "falls_head_injury",
+    "query": "दादी सीढ़ियों से गिर गईं, सिर से खून आ रहा है",
+    "retrieved": [
+      "falls_head_injury",
+      "bleeding",
+      "unconscious_breathing"
+    ],
+    "scores": [
+      0.566,
+      0.438,
+      0.337
+    ]
+  },
+  {
+    "id": 22,
+    "lang": "hi",
+    "question": "बच्चे ने कीटनाशक पी लिया",
+    "gold": "poisoning",
+    "query": "बच्चे ने कीटनाशक पी लिया",
+    "retrieved": [
+      "poisoning",
+      "choking",
+      "allergic_reaction"
+    ],
+    "scores": [
+      0.466,
+      0.331,
+      0.298
+    ]
+  },
+  {
+    "id": 23,
+    "lang": "hi",
+    "question": "मधुमक्खी ने काटा और गला सूज रहा है",
+    "gold": "allergic_reaction",
+    "query": "मधुमक्खी ने काटा और गला सूज रहा है",
+    "retrieved": [
+      "allergic_reaction",
+      "choking",
+      "poisoning"
+    ],
+    "scores": [
+      0.497,
+      0.278,
+      0.266
+    ]
+  },
+  {
+    "id": 24,
+    "lang": "hi",
+    "question": "हाथ कट गया है, खून नहीं रुक रहा",
+    "gold": "bleeding",
+    "query": "हाथ कट गया है, खून नहीं रुक रहा",
+    "retrieved": [
+      "bleeding",
+      "falls_head_injury",
+      "burns"
+    ],
+    "scores": [
+      0.676,
+      0.435,
+      0.418
+    ]
+  },
+  {
+    "id": 25,
+    "lang": "or",
+    "question": "ବାପାଙ୍କ ମୁହଁ ଗୋଟିଏ ପଟେ ବଙ୍କା ହୋଇଯାଇଛି",
+    "gold": "stroke",
+    "query": "ବାପାଙ୍କ ମୁହଁ ଗୋଟିଏ ପଟେ ବଙ୍କା ହୋଇଯାଇଛି",
+    "retrieved": [
+      "choking",
+      "allergic_reaction",
+      "stroke"
+    ],
+    "scores": [
+      0.344,
+      0.263,
+      0.254
+    ]
+  },
+  {
+    "id": 26,
+    "lang": "or",
+    "question": "ପିଲା ନିଶ୍ୱାସ ନେଉନାହିଁ, ହୃଦସ୍ପନ୍ଦନ ନାହିଁ",
+    "gold": "cpr_not_breathing",
+    "query": "ପିଲା ନିଶ୍ୱାସ ନେଉନାହିଁ, ହୃଦସ୍ପନ୍ଦନ ନାହିଁ",
+    "retrieved": [
+      "choking",
+      "cpr_not_breathing",
+      "unconscious_breathing"
+    ],
+    "scores": [
+      0.341,
+      0.337,
+      0.32
+    ]
+  },
+  {
+    "id": 27,
+    "lang": "or-roman",
+    "question": "Mausa nka sugar kami jaichi, thar thar heuchanti",
+    "gold": "low_blood_sugar",
+    "query": "Mausa nka sugar kami jaichi, thar thar heuchanti",
+    "retrieved": [
+      "choking",
+      "stroke",
+      "low_blood_sugar"
+    ],
+    "scores": [
+      0.144,
+      0.107,
+      0.096
+    ]
+  },
+  {
+    "id": 28,
+    "lang": "or-roman",
+    "question": "Kie jane ghara bhitaraku pasiba ku chesta karuchi",
+    "gold": "intruder_safety",
+    "query": "Kie jane ghara bhitaraku pasiba ku chesta karuchi",
+    "retrieved": [
+      "unconscious_breathing",
+      "choking",
+      "seizure"
+    ],
+    "scores": [
+      0.167,
+      0.162,
+      0.162
+    ]
+  }
+]

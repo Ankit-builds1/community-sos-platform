@@ -1,0 +1,470 @@
+[
+  {
+    "id": 1,
+    "lang": "en",
+    "question": "My dad has crushing pain in his chest and is sweating",
+    "gold": "chest_pain",
+    "query": "Chest pain sweating first aid",
+    "retrieved": [
+      "chest_pain",
+      "bleeding",
+      "unconscious_breathing"
+    ],
+    "scores": [
+      0.646,
+      0.464,
+      0.454
+    ]
+  },
+  {
+    "id": 2,
+    "lang": "en",
+    "question": "Neighbour collapsed, no pulse, not breathing",
+    "gold": "cpr_not_breathing",
+    "query": "CPR for collapsed person with no pulse",
+    "retrieved": [
+      "cpr_not_breathing",
+      "unconscious_breathing",
+      "chest_pain"
+    ],
+    "scores": [
+      0.752,
+      0.646,
+      0.484
+    ]
+  },
+  {
+    "id": 3,
+    "lang": "en",
+    "question": "Toddler swallowed a coin and can't breathe",
+    "gold": "choking",
+    "query": "Toddler swallowed coin, choking, first aid steps",
+    "retrieved": [
+      "choking",
+      "cpr_not_breathing",
+      "poisoning"
+    ],
+    "scores": [
+      0.531,
+      0.411,
+      0.394
+    ]
+  },
+  {
+    "id": 4,
+    "lang": "en",
+    "question": "She passed out but is still breathing",
+    "gold": "unconscious_breathing",
+    "query": "first aid for unconscious but breathing",
+    "retrieved": [
+      "unconscious_breathing",
+      "cpr_not_breathing",
+      "choking"
+    ],
+    "scores": [
+      0.61,
+      0.572,
+      0.418
+    ]
+  },
+  {
+    "id": 5,
+    "lang": "en",
+    "question": "His mouth is drooping on one side and words are slurred",
+    "gold": "stroke",
+    "query": "mouth drooping one side slurred speech first aid",
+    "retrieved": [
+      "choking",
+      "allergic_reaction",
+      "stroke"
+    ],
+    "scores": [
+      0.585,
+      0.405,
+      0.387
+    ]
+  },
+  {
+    "id": 6,
+    "lang": "en",
+    "question": "Deep cut on my leg from broken glass, lots of blood",
+    "gold": "bleeding",
+    "query": "first aid for deep cut leg from broken glass",
+    "retrieved": [
+      "bleeding",
+      "falls_head_injury",
+      "burns"
+    ],
+    "scores": [
+      0.534,
+      0.471,
+      0.306
+    ]
+  },
+  {
+    "id": 7,
+    "lang": "en",
+    "question": "Old lady tripped on the stairs, her hip is hurting badly",
+    "gold": "falls_head_injury",
+    "query": "First aid for hip injury after falling on stairs",
+    "retrieved": [
+      "falls_head_injury",
+      "bleeding",
+      "chest_pain"
+    ],
+    "scores": [
+      0.556,
+      0.441,
+      0.388
+    ]
+  },
+  {
+    "id": 8,
+    "lang": "en",
+    "question": "My son is having convulsions",
+    "gold": "seizure",
+    "query": "First aid for child's convulsions",
+    "retrieved": [
+      "cpr_not_breathing",
+      "choking",
+      "chest_pain"
+    ],
+    "scores": [
+      0.559,
+      0.453,
+      0.399
+    ]
+  },
+  {
+    "id": 9,
+    "lang": "en",
+    "question": "Diabetic uncle is shaking and confused, missed lunch",
+    "gold": "low_blood_sugar",
+    "query": "Diabetic hypoglycemia shaking confusion first aid",
+    "retrieved": [
+      "low_blood_sugar",
+      "stroke",
+      "seizure"
+    ],
+    "scores": [
+      0.632,
+      0.353,
+      0.283
+    ]
+  },
+  {
+    "id": 10,
+    "lang": "en",
+    "question": "Spilled boiling water on my arm",
+    "gold": "burns",
+    "query": "First aid for boiling water burn on arm",
+    "retrieved": [
+      "burns",
+      "bleeding",
+      "poisoning"
+    ],
+    "scores": [
+      0.507,
+      0.461,
+      0.317
+    ]
+  },
+  {
+    "id": 11,
+    "lang": "en",
+    "question": "Kid drank some phenyl from the bathroom",
+    "gold": "poisoning",
+    "query": "kid drank phenyl from bathroom first aid",
+    "retrieved": [
+      "poisoning",
+      "stroke",
+      "seizure"
+    ],
+    "scores": [
+      0.408,
+      0.336,
+      0.29
+    ]
+  },
+  {
+    "id": 12,
+    "lang": "en",
+    "question": "Her lips are swelling after eating peanuts",
+    "gold": "allergic_reaction",
+    "query": "Lip swelling after peanut ingestion first aid",
+    "retrieved": [
+      "stroke",
+      "allergic_reaction",
+      "choking"
+    ],
+    "scores": [
+      0.422,
+      0.372,
+      0.351
+    ]
+  },
+  {
+    "id": 13,
+    "lang": "en",
+    "question": "I can smell LPG in the kitchen",
+    "gold": "fire_gas_leak",
+    "query": "LPG leak in kitchen safety steps",
+    "retrieved": [
+      "fire_gas_leak",
+      "bleeding",
+      "poisoning"
+    ],
+    "scores": [
+      0.631,
+      0.319,
+      0.279
+    ]
+  },
+  {
+    "id": 14,
+    "lang": "en",
+    "question": "Someone is trying to force open my main door at night",
+    "gold": "intruder_safety",
+    "query": "Emergency response to forced door entry at night",
+    "retrieved": [
+      "intruder_safety",
+      "fire_gas_leak",
+      "choking"
+    ],
+    "scores": [
+      0.592,
+      0.367,
+      0.302
+    ]
+  },
+  {
+    "id": 15,
+    "lang": "hinglish",
+    "question": "Dadaji ke seene mein dard hai aur pasina aa raha hai",
+    "gold": "chest_pain",
+    "query": "Grandfather chest pain sweating first aid",
+    "retrieved": [
+      "chest_pain",
+      "unconscious_breathing",
+      "choking"
+    ],
+    "scores": [
+      0.514,
+      0.405,
+      0.386
+    ]
+  },
+  {
+    "id": 16,
+    "lang": "hinglish",
+    "question": "Bachche ke gale mein sikka atak gaya",
+    "gold": "choking",
+    "query": "Remove coin from child's throat",
+    "retrieved": [
+      "choking",
+      "poisoning",
+      "cpr_not_breathing"
+    ],
+    "scores": [
+      0.494,
+      0.403,
+      0.347
+    ]
+  },
+  {
+    "id": 17,
+    "lang": "hinglish",
+    "question": "Mummy behosh ho gayi par saans le rahi hai",
+    "gold": "unconscious_breathing",
+    "query": "Unconscious but breathing mother first aid steps",
+    "retrieved": [
+      "cpr_not_breathing",
+      "unconscious_breathing",
+      "choking"
+    ],
+    "scores": [
+      0.622,
+      0.573,
+      0.454
+    ]
+  },
+  {
+    "id": 18,
+    "lang": "hinglish",
+    "question": "Haath par garam tel gir gaya, jal gaya",
+    "gold": "burns",
+    "query": "First aid for hot oil burn on hand",
+    "retrieved": [
+      "burns",
+      "bleeding",
+      "fire_gas_leak"
+    ],
+    "scores": [
+      0.564,
+      0.372,
+      0.31
+    ]
+  },
+  {
+    "id": 19,
+    "lang": "hinglish",
+    "question": "Bhai ko daure pad rahe hain",
+    "gold": "seizure",
+    "query": "Brother seizures first aid guide",
+    "retrieved": [
+      "seizure",
+      "stroke",
+      "cpr_not_breathing"
+    ],
+    "scores": [
+      0.513,
+      0.36,
+      0.354
+    ]
+  },
+  {
+    "id": 20,
+    "lang": "hinglish",
+    "question": "Gas cylinder se leak ho raha hai",
+    "gold": "fire_gas_leak",
+    "query": "Gas cylinder leak safety instructions",
+    "retrieved": [
+      "fire_gas_leak",
+      "burns",
+      "poisoning"
+    ],
+    "scores": [
+      0.655,
+      0.248,
+      0.221
+    ]
+  },
+  {
+    "id": 21,
+    "lang": "hi",
+    "question": "दादी सीढ़ियों से गिर गईं, सिर से खून आ रहा है",
+    "gold": "falls_head_injury",
+    "query": "Grandmother fell stairs head bleeding first aid",
+    "retrieved": [
+      "falls_head_injury",
+      "bleeding",
+      "unconscious_breathing"
+    ],
+    "scores": [
+      0.477,
+      0.447,
+      0.273
+    ]
+  },
+  {
+    "id": 22,
+    "lang": "hi",
+    "question": "बच्चे ने कीटनाशक पी लिया",
+    "gold": "poisoning",
+    "query": "Child pesticide ingestion first aid",
+    "retrieved": [
+      "poisoning",
+      "allergic_reaction",
+      "choking"
+    ],
+    "scores": [
+      0.537,
+      0.343,
+      0.301
+    ]
+  },
+  {
+    "id": 23,
+    "lang": "hi",
+    "question": "मधुमक्खी ने काटा और गला सूज रहा है",
+    "gold": "allergic_reaction",
+    "query": "Bee sting throat swelling first aid",
+    "retrieved": [
+      "allergic_reaction",
+      "choking",
+      "bleeding"
+    ],
+    "scores": [
+      0.585,
+      0.363,
+      0.312
+    ]
+  },
+  {
+    "id": 24,
+    "lang": "hi",
+    "question": "हाथ कट गया है, खून नहीं रुक रहा",
+    "gold": "bleeding",
+    "query": "hand cut bleeding not stopping first aid",
+    "retrieved": [
+      "bleeding",
+      "falls_head_injury",
+      "cpr_not_breathing"
+    ],
+    "scores": [
+      0.705,
+      0.452,
+      0.365
+    ]
+  },
+  {
+    "id": 25,
+    "lang": "or",
+    "question": "ବାପାଙ୍କ ମୁହଁ ଗୋଟିଏ ପଟେ ବଙ୍କା ହୋଇଯାଇଛି",
+    "gold": "stroke",
+    "query": "Facial droop stroke first aid guide",
+    "retrieved": [
+      "stroke",
+      "falls_head_injury",
+      "bleeding"
+    ],
+    "scores": [
+      0.644,
+      0.397,
+      0.375
+    ]
+  },
+  {
+    "id": 26,
+    "lang": "or",
+    "question": "ପିଲା ନିଶ୍ୱାସ ନେଉନାହିଁ, ହୃଦସ୍ପନ୍ଦନ ନାହିଁ",
+    "gold": "cpr_not_breathing",
+    "query": "Child not breathing no pulse CPR",
+    "retrieved": [
+      "cpr_not_breathing",
+      "unconscious_breathing",
+      "chest_pain"
+    ],
+    "scores": [
+      0.769,
+      0.536,
+      0.499
+    ]
+  },
+  {
+    "id": 27,
+    "lang": "or-roman",
+    "question": "Mausa nka sugar kami jaichi, thar thar heuchanti",
+    "gold": "low_blood_sugar",
+    "query": "Mausa low blood sugar emergency treatment",
+    "retrieved": [
+      "low_blood_sugar",
+      "allergic_reaction",
+      "choking"
+    ],
+    "scores": [
+      0.605,
+      0.323,
+      0.303
+    ]
+  },
+  {
+    "id": 28,
+    "lang": "or-roman",
+    "question": "Kie jane ghara bhitaraku pasiba ku chesta karuchi",
+    "gold": "intruder_safety",
+    "query": null,
+    "retrieved": [],
+    "scores": []
+  }
+]
