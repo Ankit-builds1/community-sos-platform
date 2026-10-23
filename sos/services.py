@@ -67,10 +67,14 @@ def build_level_one_alerts(incident):
 
 
 def send_alert(alert):
-    """Placeholder sender. Real push (FCM) / SMS (Twilio/MSG91) / email come next.
-    For now it just logs and marks the alert as sent."""
+    """Log the alert and deliver it on Telegram if the recipient linked an account.
+    (SMS for emergency contacts would plug in here, e.g. MSG91/Twilio.)"""
+    from .notify import alert_text, send_telegram
+
     logger.warning("ALERT -> %s | incident #%s | %s", alert.recipient or alert.recipient_phone,
                    alert.incident_id, alert.get_audience_display())
+    if alert.recipient_id and alert.recipient.telegram_chat_id:
+        send_telegram(alert.recipient.telegram_chat_id, alert_text(alert))
     alert.status = Alert.Status.SENT
     alert.save(update_fields=["status"])
 

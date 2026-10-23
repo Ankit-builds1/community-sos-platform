@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # 🚨 Community SOS
 
@@ -14,7 +14,8 @@ One tap alerts guardians, security and neighbours in seconds. An AI agent triage
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![Celery](https://img.shields.io/badge/Celery-Redis-37814A?logo=celery&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-67_passing-3ecf8e)
+[![CI](https://github.com/Ankit-builds1/community-sos-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/Ankit-builds1/community-sos-platform/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/tests-72_passing-3ecf8e)
 
 ![Live incident board](docs/screenshots/live-incident-fire.png)
 
@@ -24,19 +25,27 @@ One tap alerts guardians, security and neighbours in seconds. An AI agent triage
 
 ---
 
-## 🧪 Try it in 30 seconds
+## 🧪 Try it in 30 seconds (no sign-up)
 
-Open the **[live demo](https://community-sos-07io.onrender.com)** and click a demo account on the login page (password **`Demo@1234`**):
+1. Open the **[live demo](https://community-sos-07io.onrender.com)** and click **⚡ Try it now**. You get a **private sandbox society** with six people in it: resident, two guardians, a guard, a volunteer and a society manager.
+2. As the **resident**, send an SOS in any language, e.g. *"Papa ko chhati mein dard hai"* or *"ରୋଷେଇ ଘରେ ନିଆଁ ଲାଗିଛି"*.
+3. Use the blue **"view as"** bar to switch to **Security**: open the SOS, see the AI triage, the map pin and **first-aid steps**, then click **I'm going to help**.
+4. Or leave it unanswered and watch it **escalate**: secondary guardian → emergency contacts → **human review**.
+5. Want it on your phone? Switch to a guardian, open **My circle → Connect Telegram**, then raise an SOS as the resident.
 
-| Account | Try this |
-|---|---|
-| `resident_ravi` | Send an SOS in any language, e.g. *"Papa ko chhati mein dard hai"* or *"ରୋଷେଇ ଘରେ ନିଆଁ ଲାଗିଛି"* |
-| `security_raju` | See every SOS in the society, open one, click **Show first-aid steps** and **I'm going to help** |
-| `guardian_priya` | See the alerts you received as the primary guardian |
+Prefer fixed accounts? The login page has shared demo users (`resident_ravi`, `security_raju`, `guardian_priya`, `volunteer_neha`, password **`Demo@1234`**).
 
-Leave an SOS unanswered and watch it **escalate** to the secondary guardian, then to emergency contacts, then get flagged for **human review**.
+> Free hosting: the first load can take ~30 s. Sandboxes and demo data are deleted after 24 hours.
 
-> The demo runs on free hosting, and demo data is cleared every 24 hours.
+## 🏢 Add your own building
+
+Any society can onboard itself, no admin needed for the day-to-day:
+
+1. **Create an account → Register your society.** Enter the number of towers, floors and flats per floor; every flat (Block A · 101 … ) is generated. You become the **Society Manager**.
+2. **Share the 6-letter join code** (or link) on the society WhatsApp group. Residents pick their flat; guards and volunteers pick their role.
+3. **Approve requests** on the *Manage society* page. Residents then invite family as guardians from **My circle** with a one-time link and set the alert order (P1, P2…).
+
+On the public demo, new societies go live instantly and expire after 24 h. With `DEMO_MODE=0`, a new society waits for an admin to approve it.
 
 ![Resident raising an SOS: alerts go out instantly](docs/screenshots/resident-raise-sos.png)
 
@@ -53,7 +62,10 @@ Elderly parents, children and dependents are often alone at home while family me
 | 🚨 | **One-tap SOS** | A button, an optional message in any language and optional GPS coordinates (API). An SOS is **never rejected** for missing fields |
 | 📣 | **Instant routing** | Primary guardian, security staff of the society and available volunteers are alerted together |
 | ⏫ | **Automatic escalation** | No answer → secondary guardian → emergency contacts by SMS → **human review** flag. Critical cases escalate **4× faster** |
+| 📲 | **Real notifications** | Alerts are delivered to responders' phones through a **Telegram bot** (account linking by one-time deep link) plus browser desktop notifications |
+| 🗺️ | **Live map** | The phone's GPS (if shared) or the society address on an OpenStreetMap map, with severity-coloured pins and one-click directions |
 | 🤝 | **Responder workflow** | Accept / decline / resolve. **First responder wins** (row-level locking stops two people taking the same incident) |
+| 🏢 | **Self-service onboarding** | Register a society, auto-generated flats, join codes, manager approval, guardian invite links, instant sandbox for visitors |
 | 🤖 | **AI triage agent** | LangGraph agent classifies category + severity and writes a calm summary for the guardian |
 | 🩺 | **RAG first-aid** | Retrieves the right guide and answers **only from it**, with sources and the 108 / 112 line |
 | 📊 | **Live dashboard** | Role-aware incident board, colour-coded severity, escalation timeline, auto-refresh every 5 s |
@@ -70,6 +82,7 @@ Elderly parents, children and dependents are often alone at home while family me
   Resident / Guard ──▶   │ Django + DRF (gunicorn)                      │
   (dashboard / REST)     │  • JWT + session auth, roles, rate limits    │
                          │  • raise SOS → save incident → send alerts   │──▶ PostgreSQL
+                         │  • alerts → Telegram Bot API (after commit)  │──▶ 📱 phones
                          └───────────────┬──────────────────────────────┘
                                          │ after commit (never before alerts)
                                          ▼
@@ -164,9 +177,10 @@ Rewrites use a fixed seed, so results are repeatable. Known confusions: stroke v
 | Backend | Python 3.12, Django 6, Django REST Framework, SimpleJWT |
 | AI | LangGraph, Groq (`gpt-oss-120b` + `gpt-oss-20b` backup), Pydantic, fastembed (`paraphrase-multilingual-MiniLM-L12-v2`), NumPy vector search |
 | Data & async | PostgreSQL 16 (pgvector image) / Neon, Celery, Redis |
-| Frontend | Django templates + vanilla JS (no build step), live polling |
+| Frontend | Django templates + vanilla JS (no build step), live polling, Leaflet + OpenStreetMap, browser Notification API |
+| Notifications | Telegram Bot API (webhook with secret-token verification), desktop notifications |
 | DevOps | Docker (non-root), Docker Compose (5 services), gunicorn, WhiteNoise, Render, cron-job.org |
-| Quality | 57 automated tests (LLM mocked, run offline), two evaluation harnesses |
+| Quality | 72 automated tests (LLM mocked, run offline), GitHub Actions CI (tests on PostgreSQL + Docker build), two evaluation harnesses |
 
 ---
 
@@ -179,6 +193,9 @@ Rewrites use a fixed seed, so results are repeatable. Known confusions: stroke v
 - **Race-safe accept.** `select_for_update` row locking makes "first responder wins" correct under concurrent taps.
 - **Honest evaluation.** Separate dev and held-out sets, a rules-only baseline, and safety metrics (under-triage, critical recall) rather than accuracy alone.
 - **XSS-safe dashboard.** All user text is escaped before rendering; CSRF protection on every action.
+- **Notifications can't break an SOS.** Telegram messages are sent after the commit in a background thread with a timeout; a failure is logged, never raised. The webhook is verified with Telegram's secret-token header, and link tokens are single-use.
+- **Sandboxes are isolated.** Each visitor's sandbox lives in its own society; the role switcher only lets a browser session switch between the users it created, and expired sandboxes are deleted by the cron job.
+- **GPS never delays an SOS.** The browser waits at most 4 s for a location, then sends without it.
 
 ---
 
@@ -204,6 +221,7 @@ Open http://localhost:8000 and log in with a demo account (password `Demo@1234`)
 1. Create a free **Neon** project and copy its direct connection string.
 2. On **Render**: **New → Blueprint** → select this repo. `render.yaml` defines everything; paste `DATABASE_URL`, `GROQ_API_KEY` and `DJANGO_SUPERUSER_PASSWORD`.
 3. On **cron-job.org**: call `https://<your-app>.onrender.com/api/internal/cron/?token=<CRON_SECRET>` every minute. This runs escalations and keeps the free instance awake.
+4. *(Optional)* **Telegram alerts:** create a bot with **@BotFather** and add `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME` and `TELEGRAM_WEBHOOK_SECRET` on Render. Then, with the same token and secret in your local `.env`, run `python manage.py telegram_webhook https://<your-app>.onrender.com` once.
 
 Migrations, demo data and the admin account are created automatically on start-up.
 
@@ -222,7 +240,8 @@ python manage.py runserver
 
 | Command | Purpose |
 |---|---|
-| `python manage.py test` | Run all 67 tests |
+| `python manage.py test` | Run all 72 tests |
+| `python manage.py telegram_webhook https://<site>` | Connect the Telegram bot to your deployment |
 | `python manage.py eval_triage --mode full --dataset holdout` | Triage evaluation |
 | `python manage.py eval_firstaid` | RAG retrieval evaluation (`--no-rewrite` for the ablation) |
 | `python manage.py seed_demo` | Demo society + one user per role |
@@ -242,6 +261,8 @@ python manage.py runserver
 | POST | `/api/incidents/<id>/accept/` · `decline/` · `resolve/` | Responder actions |
 | GET | `/api/incidents/<id>/first-aid/` | RAG first-aid steps for an incident |
 | POST | `/api/first-aid/ask/` | Ask the first-aid assistant directly |
+| POST | `/api/telegram/webhook/` | Telegram bot updates (secret-token protected) |
+| GET | `/api/internal/cron/?token=…` | Escalations + clean-up for hosts without Celery beat |
 
 ---
 
@@ -249,11 +270,15 @@ python manage.py runserver
 
 ```
 accounts/     custom user with roles, JWT auth
-community/    society → tower → flat, guardians, emergency contacts, seed_demo
-sos/          incidents, alerts, escalation engine, Celery tasks, cron endpoint
+community/    society → tower → flat, guardians, emergency contacts, onboarding
+              (register, join codes, approvals, invites, sandbox), seed_demo
+sos/          incidents, alerts, escalation engine, Telegram notifications,
+              Celery tasks, cron + webhook endpoints
 triage/       LangGraph agent, rules, LLM client, evaluation sets + command
 firstaid/     RAG: guides, chunker, vector store, assistant, evaluation
-dashboard/    login + live incident board (templates + JS)
+dashboard/    landing, sign-up, onboarding, manager & circle pages,
+              live incident board with map (templates + vanilla JS)
+.github/      CI: tests on PostgreSQL + Docker image build
 config/       settings, Celery, rate limits, LLM budget, health check
 docker/       container start-up script
 ```
@@ -265,8 +290,10 @@ docker/       container start-up script
 - [x] SOS, routing, 3-level escalation, responder workflow
 - [x] LangGraph triage agent + RAG first-aid assistant, both evaluated
 - [x] PostgreSQL, Celery, Docker, live deployment, web dashboard
-- [ ] **Real notification delivery:** alerts are routed, stored and logged, but push / SMS / email providers (FCM, MSG91) are not connected yet
-- [ ] Mobile app with one-tap SOS and GPS
+- [x] Self-service societies, join codes, manager approval, guardian invites, instant sandbox
+- [x] Telegram + desktop notifications, live map with GPS, CI pipeline
+- [ ] SMS to emergency contacts (MSG91 / Twilio): routed and logged today, provider not connected (paid)
+- [ ] Mobile app with one-tap SOS and background GPS
 - [ ] Voice SOS (Whisper), live chat between responders (WebSockets)
 - [ ] Move RAG vectors into pgvector
 

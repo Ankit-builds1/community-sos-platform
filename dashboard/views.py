@@ -1,3 +1,5 @@
+import secrets
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
@@ -140,7 +142,8 @@ def register_society(request):
             try:
                 society = services.register_society(
                     request.user, p["name"], p.get("address", ""), p.get("city", ""),
-                    p.get("towers") or 1, p.get("floors") or 4, p.get("flats") or 4)
+                    p.get("towers") or 1, p.get("floors") or 4, p.get("flats") or 4,
+                    latitude=p.get("latitude"), longitude=p.get("longitude"))
             except (services.OnboardingError, ValueError) as exc:
                 error = str(exc)
             else:
@@ -228,6 +231,14 @@ def circle(request):
             GuardianLink.objects.filter(resident=user, id=request.POST.get("id")).delete()
         elif action == "remove_contact":
             EmergencyContact.objects.filter(resident=user, id=request.POST.get("id")).delete()
+        elif action == "telegram_connect" and settings.TELEGRAM_BOT_USERNAME:
+            user.telegram_link_token = secrets.token_urlsafe(24)
+            user.save(update_fields=["telegram_link_token"])
+            return redirect(f"https://t.me/{settings.TELEGRAM_BOT_USERNAME}"
+                            f"?start={user.telegram_link_token}")
+        elif action == "telegram_disconnect":
+            user.telegram_chat_id = ""
+            user.save(update_fields=["telegram_chat_id"])
         elif action == "revoke_invite":
             GuardianInvite.objects.filter(resident=user, id=request.POST.get("id"),
                                           accepted_by__isnull=True).delete()
@@ -238,6 +249,7 @@ def circle(request):
         "wards": GuardianLink.objects.filter(guardian=user).select_related("resident"),
         "contacts": EmergencyContact.objects.filter(resident=user),
         "invites": [(i, request.build_absolute_uri(f"/invite/{i.token}/")) for i in invites],
+        "telegram_ready": bool(settings.TELEGRAM_BOT_TOKEN and settings.TELEGRAM_BOT_USERNAME),
     })
 
 

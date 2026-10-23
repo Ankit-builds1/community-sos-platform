@@ -31,9 +31,17 @@ def _build_flats(society, tower_names, floors, flats_per_floor):
         ])
 
 
+def _coord(value, limit):
+    try:
+        v = round(float(value), 6)
+    except (TypeError, ValueError):
+        return None
+    return v if -limit <= v <= limit else None
+
+
 @transaction.atomic
 def register_society(user, name, address, city, towers=1, floors=4, flats_per_floor=4,
-                     sandbox=None):
+                     sandbox=None, latitude=None, longitude=None):
     """Creator becomes the Society Manager. Demo mode: approved instantly but expires."""
     if hasattr(user, "residency"):
         raise OnboardingError("You already belong to a society.")
@@ -46,6 +54,7 @@ def register_society(user, name, address, city, towers=1, floors=4, flats_per_fl
     society = Society.objects.create(
         name=name.strip()[:150], address=address.strip() or "-", city=city.strip()[:80] or "-",
         created_by=user, is_sandbox=sandbox,
+        latitude=_coord(latitude, 90), longitude=_coord(longitude, 180),
         expires_at=sandbox_expiry() if sandbox else None,
         status=Society.Status.APPROVED if sandbox else Society.Status.PENDING,
     )
@@ -145,7 +154,8 @@ def create_sandbox():
     tag = secrets.token_hex(3).upper()
     exp = sandbox_expiry()
     society = Society.objects.create(name=f"Sandbox Heights {tag}", address="Demo Road",
-                                     city="Bhubaneswar", is_sandbox=True, expires_at=exp)
+                                     city="Bhubaneswar", is_sandbox=True, expires_at=exp,
+                                     latitude=20.296100, longitude=85.824500)
     _build_flats(society, ["Block A", "Block B"], 4, 4)
     society.ensure_join_code()
     flat = Flat.objects.get(tower__society=society, tower__name="Block A", number="402")

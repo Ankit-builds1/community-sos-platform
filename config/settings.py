@@ -120,6 +120,13 @@ else:
 # Secret for the external cron URL (single-container hosting without Celery beat)
 CRON_SECRET = os.getenv("CRON_SECRET", "")
 
+# Telegram bot notifications (optional; empty token = disabled)
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "")
+TELEGRAM_WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
+SITE_URL = os.getenv("SITE_URL", (f"https://{os.environ['RENDER_EXTERNAL_HOSTNAME']}"
+                                  if os.getenv("RENDER_EXTERNAL_HOSTNAME") else "")).rstrip("/")
+
 # Abuse protection for a public demo
 LLM_DAILY_CALL_LIMIT = int(os.getenv("LLM_DAILY_CALL_LIMIT", "150"))  # ~150 x 900 tokens
 DEMO_MODE = os.getenv("DEMO_MODE", "0") == "1"        # disables sign-up, auto-cleans data

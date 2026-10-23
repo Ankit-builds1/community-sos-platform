@@ -1,7 +1,13 @@
 {% extends "dashboard/base.html" %}
 {% block title %}Incident board · Community SOS{% endblock %}
 {% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
 <style>
+  #map { height: 240px; border-radius: 10px; border: 1px solid var(--line); z-index: 0; }
+  .leaflet-container { background: #0e141b; font: inherit; }
+  .geo { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .geo input { width: auto; }
   header { display: flex; align-items: center; justify-content: space-between; gap: 16px;
            padding: 14px 24px; border-bottom: 1px solid var(--line); background: var(--panel);
            position: sticky; top: 0; z-index: 5; }
@@ -20,7 +26,7 @@
   .stat .l { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
   .raise { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
            padding: 16px; margin-bottom: 18px; display: grid; gap: 10px;
-           grid-template-columns: 180px 1fr auto; align-items: center; }
+           grid-template-columns: 180px 1fr auto auto; align-items: center; }
   .grid { display: grid; grid-template-columns: minmax(320px, 420px) 1fr; gap: 18px; align-items: start; }
   .list { display: flex; flex-direction: column; gap: 8px; }
   .item { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--line);
@@ -71,6 +77,7 @@
   <div class="row" style="margin-bottom:14px">
     <h1 style="margin:0;font-size:20px;display:flex;align-items:center;gap:10px">
       <span class="live" title="Live: refreshes every 5 s"></span> Incident board</h1>
+    <button class="btn" id="notify-btn" type="button" style="display:none">🔔 Enable desktop alerts</button>
     {% if user.residency %}<span class="muted">{{ user.residency.society.name }}{% if user.residency.flat %} · {{ user.residency.flat.tower.name }} · Flat {{ user.residency.flat.number }}{% endif %}</span>{% endif %}
   </div>
 
@@ -98,6 +105,7 @@
     </select>
     <input id="raise-message" maxlength="500"
            placeholder="Describe the emergency (any language), or leave empty and press SOS">
+    <label class="geo" style="margin:0"><input type="checkbox" id="raise-geo" checked> 📍 Share location</label>
     <button class="btn btn-primary" type="submit">🚨 Send SOS</button>
   </form>
   {% endif %}
@@ -246,10 +254,55 @@ function renderDetail() {
       ${canAccept(i) ? `<button class="btn" data-act="decline">Can't help</button>` : ""}
       ${canResolve(i) ? `<button class="btn" data-act="resolve">Mark resolved</button>` : ""}
     </div>
+    ${i.map_point ? `<div class="section"><h3>Location · ${i.map_point.source === "gps" ? "live GPS from the phone" : "society address"}</h3>
+      <div id="map-slot"></div>
+      <div class="muted" style="font-size:12px;margin-top:6px"><a target="_blank" rel="noopener"
+        href="https://www.google.com/maps/dir/?api=1&destination=${i.map_point.lat},${i.map_point.lng}">Get directions ↗</a></div></div>` : ""}
     <div class="section"><h3>First aid (RAG)</h3>${renderFirstAid(i)}</div>
     <div class="section"><h3>Escalation timeline</h3><ul class="timeline">${timeline.join("")}</ul></div>`;
 
   box.querySelectorAll("[data-act]").forEach(b => b.addEventListener("click", () => act(i.id, b.dataset.act, b)));
+  renderMap(i);
+}
+
+// One Leaflet map that survives the 5 s re-render: the element is moved into the new slot.
+const SEV_HEX = { critical: "#ff4d4f", high: "#ff9f1a", medium: "#f5c542", low: "#3ecf8e" };
+let map = null, mapEl = null, pins = null, centeredOn = null;
+function renderMap(sel) {
+  const slot = document.getElementById("map-slot");
+  if (!slot || !window.L) return;
+  if (!map) {
+    mapEl = document.createElement("div"); mapEl.id = "map"; slot.appendChild(mapEl);
+    map = L.map(mapEl, { scrollWheelZoom: false });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
+    pins = L.layerGroup().addTo(map);
+  } else { slot.appendChild(mapEl); }
+  pins.clearLayers();
+  incidents.filter(x => x.map_point && (ACTIVE.includes(x.status) || x.id === sel.id)).forEach(x => {
+    const big = x.id === sel.id;
+    L.circleMarker([x.map_point.lat, x.map_point.lng], {
+      radius: big ? 11 : 7, weight: big ? 3 : 1, color: big ? "#fff" : SEV_HEX[x.severity] || "#8b98a7",
+      fillColor: SEV_HEX[x.severity] || "#8b98a7", fillOpacity: .85 })
+      .bindTooltip(`#${x.id} · ${esc(x.category)} · ${esc(x.location)}`)
+      .on("click", () => { selectedId = x.id; render(new Set()); }).addTo(pins);
+  });
+  map.invalidateSize();
+  if (centeredOn !== sel.id) { map.setView([sel.map_point.lat, sel.map_point.lng], 16); centeredOn = sel.id; }
+}
+
+// Desktop notifications for new SOS while the board is open
+const notifyBtn = document.getElementById("notify-btn");
+if ("Notification" in window && Notification.permission === "default") {
+  notifyBtn.style.display = "";
+  notifyBtn.addEventListener("click", () => Notification.requestPermission()
+    .then(p => { if (p !== "default") notifyBtn.style.display = "none"; }));
+}
+function desktopAlert(i) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const n = new Notification(`🚨 SOS #${i.id} · ${i.category}`,
+    { body: `${i.location}: ${i.message || "One-tap SOS"}`, tag: `sos-${i.id}` });
+  n.onclick = () => { window.focus(); selectedId = i.id; render(new Set()); };
 }
 
 function render(newIds) { renderStats(); renderList(newIds); renderDetail(); }
@@ -277,7 +330,10 @@ async function refresh() {
     incidents = await api("/api/incidents/");
   } catch (e) { toast("⚠️ Connection problem: retrying…"); return; }
   const newIds = new Set(incidents.filter(i => !seen.has(i.id)).map(i => i.id));
-  if (!firstLoad && newIds.size) toast(`🚨 ${newIds.size} new SOS received`);
+  if (!firstLoad && newIds.size) {
+    toast(`🚨 ${newIds.size} new SOS received`);
+    incidents.filter(i => newIds.has(i.id) && i.resident_username !== ME).forEach(desktopAlert);
+  }
   incidents.forEach(i => seen.add(i.id));
   if (selectedId === null && incidents.length) selectedId = sortIncidents(incidents)[0].id;
   render(firstLoad ? new Set() : newIds);
@@ -288,10 +344,16 @@ const raiseForm = document.getElementById("raise-form");
 if (raiseForm) raiseForm.addEventListener("submit", async e => {
   e.preventDefault();
   const btn = raiseForm.querySelector("button"); btn.disabled = true;
+  const body = { category: document.getElementById("raise-category").value,
+                 message: document.getElementById("raise-message").value };
+  if (document.getElementById("raise-geo").checked && navigator.geolocation) {
+    // never let GPS delay an SOS by more than 4 s
+    const pos = await new Promise(ok => navigator.geolocation.getCurrentPosition(ok, () => ok(null),
+      { timeout: 4000, maximumAge: 60000 })).catch(() => null);
+    if (pos) { body.latitude = pos.coords.latitude.toFixed(6); body.longitude = pos.coords.longitude.toFixed(6); }
+  }
   try {
-    const created = await api("/api/incidents/raise/", { method: "POST", body: JSON.stringify({
-      category: document.getElementById("raise-category").value,
-      message: document.getElementById("raise-message").value }) });
+    const created = await api("/api/incidents/raise/", { method: "POST", body: JSON.stringify(body) });
     selectedId = created.id;
     document.getElementById("raise-message").value = "";
     toast("🚨 SOS sent. Your guardian, security and volunteers have been alerted.");

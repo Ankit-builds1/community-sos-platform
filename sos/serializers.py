@@ -44,6 +44,17 @@ class IncidentSerializer(serializers.ModelSerializer):
             return f"{obj.flat.tower.name} · Flat {obj.flat.number}"
         return obj.society.name if obj.society_id else "Unknown location"
 
+    map_point = serializers.SerializerMethodField()
+
+    def get_map_point(self, obj):
+        """Where to drop the pin: the phone's GPS if shared, else the society's address."""
+        if obj.latitude is not None and obj.longitude is not None:
+            return {"lat": float(obj.latitude), "lng": float(obj.longitude), "source": "gps"}
+        s = obj.society
+        if s and s.latitude is not None and s.longitude is not None:
+            return {"lat": float(s.latitude), "lng": float(s.longitude), "source": "society"}
+        return None
+
     class Meta:
         model = Incident
         fields = ["id", "resident", "resident_username", "society", "flat", "category",
@@ -51,6 +62,7 @@ class IncidentSerializer(serializers.ModelSerializer):
                   "guardian_summary", "triage_confidence", "triage_source",
                   "injection_suspected", "triaged_at",
                   "escalation_level", "needs_human_review", "assigned_responder",
-                  "assigned_responder_username", "location", "created_at", "resolved_at",
+                  "assigned_responder_username", "location", "map_point",
+                  "created_at", "resolved_at",
                   "alerts"]
         read_only_fields = fields

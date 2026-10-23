@@ -28,6 +28,9 @@ class User(AbstractUser):
 
     # Volunteers only: can they take incidents right now?
     is_available = models.BooleanField(default=False)
+    # Real notifications: linked by opening t.me/<bot>?start=<telegram_link_token>
+    telegram_chat_id = models.CharField(max_length=32, blank=True)
+    telegram_link_token = models.CharField(max_length=64, blank=True, db_index=True)
 
     objects = SOSUserManager()
 

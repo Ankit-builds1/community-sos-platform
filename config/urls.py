@@ -17,11 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
-from sos.cron import cron, healthz
+from sos.cron import cron, healthz, telegram_webhook
 
 urlpatterns = [
     path('healthz', healthz),
     path('api/internal/cron/', cron),
+    path('api/telegram/webhook/', telegram_webhook),
     path('admin/', admin.site.urls),
     path('api/auth/', include('accounts.urls')),
     path('api/', include('community.urls')),
