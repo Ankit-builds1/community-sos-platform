@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 
 import dj_database_url
@@ -87,8 +88,30 @@ CELERY_BEAT_SCHEDULE = {
         "task": "sos.tasks.run_escalations_task",
         "schedule": 10.0,
     },
+    "cleanup-demo-data-hourly": {
+        "task": "sos.tasks.cleanup_demo_data_task",
+        "schedule": 3600.0,
+    },
 }
 SOS_USE_CELERY = os.getenv("SOS_USE_CELERY", "1") == "1"
+
+# Shared cache (Redis db 1; Celery uses db 0) for rate limits and the LLM budget,
+# so every gunicorn worker and the Celery worker see the same counters.
+# Tests use an in-memory cache, so test runs never touch real counters.
+RUNNING_TESTS = len(sys.argv) > 1 and sys.argv[1] == "test"
+_REDIS_URL = os.getenv("REDIS_URL", "")
+if _REDIS_URL and not RUNNING_TESTS:
+    CACHES = {"default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": _REDIS_URL.rsplit("/", 1)[0] + "/1",
+    }}
+else:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+
+# Abuse protection for a public demo
+LLM_DAILY_CALL_LIMIT = int(os.getenv("LLM_DAILY_CALL_LIMIT", "150"))  # ~150 x 900 tokens
+DEMO_MODE = os.getenv("DEMO_MODE", "0") == "1"        # disables sign-up, auto-cleans data
+DEMO_RETENTION_HOURS = int(os.getenv("DEMO_RETENTION_HOURS", "24"))
 
 # REST API: every endpoint needs a JWT token unless the view says otherwise
 REST_FRAMEWORK = {
@@ -99,6 +122,18 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    # Rate limits (counted in the shared cache). The scoped ones are applied per view.
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': os.getenv('THROTTLE_ANON', '30/min'),
+        'user': os.getenv('THROTTLE_USER', '240/min'),      # the board polls every 5 s
+        'sos_raise': os.getenv('THROTTLE_SOS', '30/hour'),   # per user
+        'first_aid': os.getenv('THROTTLE_FIRST_AID', '40/hour'),
+        'register': os.getenv('THROTTLE_REGISTER', '5/hour'),  # per IP
+    },
 }
 
 MIDDLEWARE = [
@@ -192,3 +227,18 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+
+# ---------------- Production security (active when DJANGO_DEBUG=0) ----------------
+# e.g. DJANGO_CSRF_TRUSTED_ORIGINS=https://community-sos.duckdns.org
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
+                        if o.strip()]
+if not DEBUG:
+    if SECRET_KEY.startswith("django-insecure"):
+        raise RuntimeError("Set DJANGO_SECRET_KEY in .env before running with DEBUG off.")
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")  # HTTPS ends at Caddy
+    SESSION_COOKIE_SECURE = True       # cookies only over HTTPS
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 3600         # start small; raise once HTTPS is confirmed stable
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = "DENY"

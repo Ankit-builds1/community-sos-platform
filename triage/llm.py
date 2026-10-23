@@ -5,6 +5,8 @@ import logging
 from django.conf import settings
 from groq import Groq, RateLimitError
 
+from config.llm_budget import spend_llm_call
+
 from .schema import TriageResult
 
 logger = logging.getLogger(__name__)
@@ -50,6 +52,7 @@ Return ONLY a JSON object with these keys:
 def llm_triage(message: str, category_hint: str) -> TriageResult:
     if not settings.GROQ_API_KEY:
         raise RuntimeError("GROQ_API_KEY is not set")
+    spend_llm_call("triage")  # raises when today's budget is used up -> rules fallback
 
     # max_retries=1: a short per-minute limit is retried once; a daily limit is not
     # worth waiting for, so we move straight to the backup model instead.

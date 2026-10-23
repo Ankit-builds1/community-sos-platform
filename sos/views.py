@@ -2,8 +2,10 @@ from django.db.models import Q
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
 
 from accounts.models import User
+from config.throttles import FirstAidThrottle, SOSRaiseThrottle
 
 from .models import Incident
 from .serializers import IncidentSerializer, RaiseSOSSerializer
@@ -36,7 +38,8 @@ class IncidentViewSet(viewsets.ReadOnlyModelViewSet):
         return qs.filter(visible).distinct()
 
     @action(detail=False, methods=["post"], url_path="raise",
-            serializer_class=RaiseSOSSerializer)
+            serializer_class=RaiseSOSSerializer,
+            throttle_classes=[SOSRaiseThrottle])  # only active in DEMO_MODE
     def raise_(self, request):
         data = RaiseSOSSerializer(data=request.data)
         data.is_valid(raise_exception=True)
@@ -63,7 +66,8 @@ class IncidentViewSet(viewsets.ReadOnlyModelViewSet):
     def resolve(self, request, pk=None):
         return self._run(resolve_incident, request)
 
-    @action(detail=True, methods=["get"], url_path="first-aid")
+    @action(detail=True, methods=["get"], url_path="first-aid",
+            throttle_classes=[FirstAidThrottle, UserRateThrottle])
     def first_aid(self, request, pk=None):
         """GET /api/incidents/<id>/first-aid/  - RAG first-aid steps for this incident.
         Uses the resident's original message (query rewriting translates it to English).

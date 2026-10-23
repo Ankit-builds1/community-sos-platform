@@ -13,6 +13,8 @@ import re
 from django.conf import settings
 from groq import Groq
 
+from config.llm_budget import spend_llm_call
+
 from .vectorstore import search
 
 logger = logging.getLogger(__name__)
@@ -124,6 +126,7 @@ def rewrite_query(question: str) -> str | None:
     if not settings.GROQ_API_KEY:
         return question
     try:
+        spend_llm_call("query rewrite")
         client = Groq(api_key=settings.GROQ_API_KEY, timeout=6.0, max_retries=0)
         response = client.chat.completions.create(
             model=settings.GROQ_FALLBACK_MODEL or settings.GROQ_MODEL,  # small + fast
@@ -144,6 +147,7 @@ def rewrite_query(question: str) -> str | None:
 def _generate(question, chunks):
     if not settings.GROQ_API_KEY:
         raise RuntimeError("GROQ_API_KEY is not set")
+    spend_llm_call("first-aid answer")  # over budget -> extractive fallback
     context = "\n\n".join(f"[{i}] {c['title']} - {c['section']}\n{c['text']}"
                           for i, c in enumerate(chunks, 1))
     client = Groq(api_key=settings.GROQ_API_KEY, timeout=10.0, max_retries=1)
