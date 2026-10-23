@@ -54,3 +54,14 @@ class IncidentViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=["post"])
     def resolve(self, request, pk=None):
         return self._run(resolve_incident, request)
+
+    @action(detail=True, methods=["get"], url_path="first-aid")
+    def first_aid(self, request, pk=None):
+        """GET /api/incidents/<id>/first-aid/  - RAG first-aid steps for this incident.
+        Uses the AI triage's English summary when available (better retrieval than raw
+        Hinglish / Odia text), otherwise the original message."""
+        from firstaid.assistant import answer
+
+        incident = self.get_object()
+        query = incident.guardian_summary or incident.message or incident.category
+        return Response({"incident": incident.pk, "query": query, **answer(query)})

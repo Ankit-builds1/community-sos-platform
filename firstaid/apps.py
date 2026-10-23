@@ -1,0 +1,7 @@
+from django.apps import AppConfig
+
+
+class FirstaidConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "firstaid"
+    verbose_name = "First-aid RAG"

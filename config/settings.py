@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'community',
     'sos',
     'triage',
+    'firstaid',
 ]
 
 # Use our custom User model (must be set before the first migrate)
