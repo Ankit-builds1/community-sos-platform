@@ -23,8 +23,12 @@ _index = None  # (piece_vectors, piece_to_doc, docs)
 def get_embedder():
     global _embedder
     if _embedder is None:
+        import os
+
         from fastembed import TextEmbedding  # imported lazily: slow first load
-        _embedder = TextEmbedding(model_name=EMBED_MODEL)
+        # In Docker the model cache lives on a volume, so it downloads only once
+        _embedder = TextEmbedding(model_name=EMBED_MODEL,
+                                  cache_dir=os.getenv("FASTEMBED_CACHE_PATH") or None)
     return _embedder
 
 

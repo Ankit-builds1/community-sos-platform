@@ -2,7 +2,7 @@
 
 An AI-powered SOS and emergency coordination platform for gated societies and apartments. A resident at home alone (an elderly parent, a child, a dependent) presses one button, and guardians, security staff and nearby volunteers are alerted instantly. If nobody responds in time, the alert escalates automatically. An AI agent then triages the emergency, and a RAG assistant gives grounded first-aid steps while help is on the way. Both work in **English, Hindi and Odia**.
 
-> 🚧 **Work in progress**, solo project. Next up: Docker + PostgreSQL + Celery, a web dashboard and deployment.
+> 🚧 **Work in progress**, solo project. Next up: a web dashboard and deployment.
 
 ## ✨ Features
 
@@ -67,13 +67,42 @@ Query rewrites use a fixed seed, so results are repeatable. Known confusions: st
 
 ## 🛠 Tech stack
 
-**Backend:** Python, Django 6, Django REST Framework, SimpleJWT, SQLite (dev)
+**Backend:** Python, Django 6, Django REST Framework, SimpleJWT, PostgreSQL 16 (pgvector image), Celery + Redis, gunicorn
+**DevOps:** Docker Compose (5 services: web, worker, beat, db, redis), health checks, non-root containers
 **AI:** LangGraph, Groq (`gpt-oss-120b` + `gpt-oss-20b` backup), Pydantic, fastembed (`paraphrase-multilingual-MiniLM-L12-v2`), NumPy vector search
-**Quality:** 35 automated tests (LLM mocked, run offline), evaluation harnesses for triage and RAG
+**Quality:** 38 automated tests (LLM mocked, run offline), evaluation harnesses for triage and RAG
 
-*Planned:* PostgreSQL + pgvector, Redis + Celery, Docker, Django Channels, web dashboard
+*Planned:* web dashboard, Django Channels (live updates), moving RAG vectors into pgvector
 
-## 🚀 Run locally
+## 🐳 Run with Docker (recommended)
+
+You only need Docker and a free Groq API key ([console.groq.com](https://console.groq.com)).
+
+```bash
+git clone https://github.com/Ankit-builds1/community-sos-platform.git
+cd community-sos-platform
+cp .env.example .env              # then add your GROQ_API_KEY
+docker compose up -d --build      # db, redis, web, Celery worker, Celery beat
+docker compose exec web python manage.py seed_demo
+docker compose exec web python manage.py createsuperuser
+```
+
+Open http://localhost:8000/admin. Watch the AI triage and escalations live with `docker compose logs -f worker`.
+
+```
+┌─────────┐   ┌───────────────┐   ┌──────────┐   ┌──────────────────┐
+│ Client  │──▶│ web: Django + │──▶│  Redis   │──▶│ worker: Celery   │──▶ Groq LLM
+│ (API)   │   │ gunicorn      │   │ (broker) │   │ (AI triage)      │
+└─────────┘   └──────┬────────┘   └────▲─────┘   └────────┬─────────┘
+                     │                 │ every 10 s       │
+                     ▼                 │                  ▼
+              ┌──────────────┐   ┌─────┴──────┐   ┌──────────────┐
+              │ PostgreSQL   │◀──│ beat:      │   │ escalation   │
+              │ (pgvector)   │   │ scheduler  │   │ checks       │
+              └──────────────┘   └────────────┘   └──────────────┘
+```
+
+## 🚀 Run locally without Docker (for development)
 
 ```bash
 git clone https://github.com/Ankit-builds1/community-sos-platform.git
@@ -89,7 +118,7 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-In a second terminal, start the escalation worker: `python manage.py run_escalations`
+This uses SQLite unless `DATABASE_URL` is set in `.env`. For background tasks, start Redis (`docker compose up -d redis`) and, in separate terminals, `celery -A config worker --pool=solo -l info` and `celery -A config beat -l info` (`--pool=solo` is needed on Windows).
 
 | Command | Purpose |
 |---|---|
@@ -118,7 +147,7 @@ In a second terminal, start the escalation worker: `python manage.py run_escalat
 - [x] SOS alerts, 3-level escalation, responder workflow
 - [x] LangGraph AI triage agent + evaluation
 - [x] RAG first-aid assistant + evaluation
-- [ ] Docker + PostgreSQL (pgvector) + Redis + Celery
+- [x] Docker + PostgreSQL + Redis + Celery (queued triage, scheduled escalation)
 - [ ] Web dashboard for security and admin
 - [ ] Deployment + demo video
 - [ ] Voice SOS (Whisper), real push/SMS notifications, live chat

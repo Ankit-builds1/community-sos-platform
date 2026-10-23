@@ -1,16 +1,34 @@
-# Step 1: database + cache in containers. The Django app still runs from your venv.
-#   docker compose up -d      start (in the background)
-#   docker compose ps         check status
-#   docker compose down       stop (data is kept in the named volume)
+# The whole platform:  docker compose up -d --build
+#   http://localhost:8000          API + admin (gunicorn)
+#   docker compose logs -f worker  watch AI triage + escalations
+#   docker compose down            stop everything (data is kept in volumes)
+#
+# Only db + redis (for local development with the venv):  docker compose up -d db redis
+
+x-app: &app                            # shared settings for web, worker and beat
+  build: .
+  env_file: .env                       # GROQ_API_KEY etc.
+  environment:
+    # inside the Docker network, services reach each other by name
+    DATABASE_URL: postgres://sos:${POSTGRES_PASSWORD:-sos_dev_password}@db:5432/sos
+    REDIS_URL: redis://redis:6379/0
+    DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,web
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+
 services:
   db:
-    image: pgvector/pgvector:pg16      # PostgreSQL 16 with the pgvector extension (for RAG later)
+    image: pgvector/pgvector:pg16      # PostgreSQL 16 with the pgvector extension
     environment:
       POSTGRES_DB: sos
       POSTGRES_USER: sos
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sos_dev_password}
     ports:
-      - "5433:5432"                    # 5433 on your PC, so it never clashes with a local Postgres
+      - "5433:5432"                    # for tools on your PC; containers use db:5432
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -18,16 +36,34 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    restart: unless-stopped
 
   redis:
-    image: redis:7-alpine              # message broker for Celery (next step)
+    image: redis:7-alpine              # Celery message broker
     ports:
-      - "6380:6379"                    # 6380 on your PC, to avoid clashes
+      - "6380:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 10
+    restart: unless-stopped
+
+  web:
+    <<: *app
+    ports:
+      - "8000:8000"
+    volumes:
+      - models:/models                 # embedding model cache (downloaded once)
+
+  worker:
+    <<: *app
+    command: celery -A config worker -l info --concurrency 2
+
+  beat:
+    <<: *app
+    command: celery -A config beat -l info --schedule /tmp/celerybeat-schedule
 
 volumes:
   pgdata:
+  models:

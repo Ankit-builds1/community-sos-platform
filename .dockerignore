@@ -1,0 +1,11 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.git/
+.vscode/
+.env
+db.sqlite3
+staticfiles/
+firstaid/index/
+*/eval/results/
