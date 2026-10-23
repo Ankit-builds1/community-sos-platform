@@ -62,7 +62,12 @@ INSTALLED_APPS = [
     'sos',
     'triage',
     'firstaid',
+    'dashboard',
 ]
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'board'   # also fixes the old /accounts/profile/ 404 after API login
+LOGOUT_REDIRECT_URL = 'login'
 
 # Use our custom User model (must be set before the first migrate)
 AUTH_USER_MODEL = 'accounts.User'

@@ -24,4 +24,5 @@ urlpatterns = [
     path('api/', include('sos.urls')),
     path('api/', include('firstaid.urls')),
     path('api-auth/', include('rest_framework.urls')),  # "Log in" button on API pages
+    path('', include('dashboard.urls')),                # web dashboard at /
 ]

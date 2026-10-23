@@ -3,6 +3,8 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from accounts.models import User
+
 from .models import Incident
 from .serializers import IncidentSerializer, RaiseSOSSerializer
 from .services import (SOSActionError, accept_incident, decline_incident, raise_sos,
@@ -22,10 +24,16 @@ class IncidentViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Incident.objects.prefetch_related("alerts__recipient")
+        qs = (Incident.objects
+              .select_related("resident", "flat__tower", "society", "assigned_responder")
+              .prefetch_related("alerts__recipient"))
         if user.is_staff:
             return qs
-        return qs.filter(Q(resident=user) | Q(alerts__recipient=user)).distinct()
+        visible = Q(resident=user) | Q(alerts__recipient=user)
+        residency = getattr(user, "residency", None)
+        if user.role == User.Role.SECURITY and residency:
+            visible |= Q(society_id=residency.society_id)  # guards see their whole society
+        return qs.filter(visible).distinct()
 
     @action(detail=False, methods=["post"], url_path="raise",
             serializer_class=RaiseSOSSerializer)

@@ -34,6 +34,15 @@ class RaiseSOSSerializer(serializers.Serializer):
 class IncidentSerializer(serializers.ModelSerializer):
     resident_username = serializers.CharField(source="resident.username", read_only=True)
     alerts = AlertSerializer(many=True, read_only=True)
+    # display fields for the dashboard
+    location = serializers.SerializerMethodField()
+    assigned_responder_username = serializers.CharField(
+        source="assigned_responder.username", read_only=True, default=None)
+
+    def get_location(self, obj):
+        if obj.flat_id:
+            return f"{obj.flat.tower.name} · Flat {obj.flat.number}"
+        return obj.society.name if obj.society_id else "Unknown location"
 
     class Meta:
         model = Incident
@@ -42,6 +51,6 @@ class IncidentSerializer(serializers.ModelSerializer):
                   "guardian_summary", "triage_confidence", "triage_source",
                   "injection_suspected", "triaged_at",
                   "escalation_level", "needs_human_review", "assigned_responder",
-                  "created_at", "resolved_at",
+                  "assigned_responder_username", "location", "created_at", "resolved_at",
                   "alerts"]
         read_only_fields = fields

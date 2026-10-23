@@ -1,0 +1,301 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Incident board · Community SOS{% endblock %}
+{% block head %}
+<style>
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px;
+           padding: 14px 24px; border-bottom: 1px solid var(--line); background: var(--panel);
+           position: sticky; top: 0; z-index: 5; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; }
+  .live { width: 10px; height: 10px; border-radius: 50%; background: var(--low);
+          animation: pulse 2s infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(62,207,142,.6); }
+                     70% { box-shadow: 0 0 0 10px rgba(62,207,142,0); }
+                     100% { box-shadow: 0 0 0 0 rgba(62,207,142,0); } }
+  .who { display: flex; align-items: center; gap: 12px; }
+  main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+  .stats { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 12px; margin-bottom: 18px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+          padding: 14px 16px; }
+  .stat .n { font-size: 26px; font-weight: 700; }
+  .stat .l { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+  .raise { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+           padding: 16px; margin-bottom: 18px; display: grid; gap: 10px;
+           grid-template-columns: 180px 1fr auto; align-items: center; }
+  .grid { display: grid; grid-template-columns: minmax(320px, 420px) 1fr; gap: 18px; align-items: start; }
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .item { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--line);
+          border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: border-color .15s; }
+  .item:hover { border-color: #33404f; }
+  .item.selected { outline: 2px solid var(--info); }
+  .item.sev-b-critical { border-left-color: var(--critical); }
+  .item.sev-b-high { border-left-color: var(--high); }
+  .item.sev-b-medium { border-left-color: var(--medium); }
+  .item.sev-b-low { border-left-color: var(--low); }
+  .item.closed { opacity: .55; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .msg { margin: 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .flash { animation: flash 1.2s ease-out; }
+  @keyframes flash { from { background: rgba(255,77,79,.25); } to { background: var(--panel); } }
+  .detail { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+            padding: 20px; min-height: 300px; position: sticky; top: 76px; }
+  .detail h2 { margin: 0 0 4px; font-size: 20px; }
+  .quote { background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+           padding: 12px 14px; margin: 12px 0; font-size: 15px; }
+  .ai { border: 1px solid #1f3a5c; background: rgba(78,161,255,.07); border-radius: 8px;
+        padding: 12px 14px; margin: 12px 0; }
+  .section { margin-top: 20px; }
+  .section h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+                color: var(--muted); margin: 0 0 10px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .timeline { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--line); }
+  .timeline li { position: relative; padding: 0 0 12px 16px; }
+  .timeline li::before { content: ""; position: absolute; left: -6px; top: 5px; width: 10px; height: 10px;
+                         border-radius: 50%; background: var(--muted); }
+  .timeline li.accepted::before { background: var(--low); }
+  .timeline li.declined::before { background: var(--critical); }
+  .steps { margin: 0; padding-left: 20px; } .steps li { margin-bottom: 6px; }
+  .warn { background: rgba(255,159,26,.12); color: #ffd08a; border-radius: 8px; padding: 8px 12px; margin-top: 10px; }
+  .toast { position: fixed; right: 20px; bottom: 20px; background: var(--panel-2);
+           border: 1px solid var(--line); padding: 12px 16px; border-radius: 10px; display: none; }
+  .empty { color: var(--muted); text-align: center; padding: 40px 0; }
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr; } .detail { position: static; }
+    .stats { grid-template-columns: repeat(2, 1fr); } .raise { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+{% block body %}
+<header>
+  <div class="brand"><span class="live" title="Live: refreshes every 5 s"></span> Community SOS · Incident board</div>
+  <div class="who">
+    <span><strong>{{ user.username }}</strong> <span class="muted">({{ user.get_role_display }})</span></span>
+    {% if user.is_staff %}<a href="/admin/">Admin</a>{% endif %}
+    <form method="post" action="{% url 'logout' %}" style="margin:0">{% csrf_token %}
+      <button class="btn" type="submit">Log out</button></form>
+  </div>
+</header>
+
+<main>
+  <div class="stats">
+    <div class="stat"><div class="n" id="s-open">–</div><div class="l">Open / unanswered</div></div>
+    <div class="stat"><div class="n sev-critical" id="s-critical">–</div><div class="l">Critical, not resolved</div></div>
+    <div class="stat"><div class="n sev-high" id="s-escalated">–</div><div class="l">Escalated</div></div>
+    <div class="stat"><div class="n" id="s-review">–</div><div class="l">Needs human review</div></div>
+    <div class="stat"><div class="n sev-low" id="s-active">–</div><div class="l">Help on the way</div></div>
+  </div>
+
+  {% if can_raise %}
+  <form class="raise" id="raise-form">
+    <select id="raise-category">
+      <option value="other">Category (optional)</option>
+      <option value="medical">Medical</option><option value="fall">Fall</option>
+      <option value="fire">Fire</option><option value="security">Security threat</option>
+    </select>
+    <input id="raise-message" maxlength="500"
+           placeholder="Describe the emergency (any language), or leave empty and press SOS">
+    <button class="btn btn-primary" type="submit">🚨 Send SOS</button>
+  </form>
+  {% endif %}
+
+  <div class="grid">
+    <div class="list" id="list"><div class="empty">Loading incidents…</div></div>
+    <div class="detail" id="detail"><div class="empty">Select an incident to see details.</div></div>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ME = "{{ user.username|escapejs }}";
+const ROLE = "{{ user.role|escapejs }}";
+const IS_STAFF = {{ user.is_staff|yesno:"true,false" }};
+const ACTIVE = ["open", "escalated", "active"];
+const SEV_ORDER = { critical: 0, high: 1, medium: 2, low: 3, "": 4 };
+let incidents = [], selectedId = null, seen = new Set(), firstLoad = true;
+const firstAid = {};  // incident id -> {loading} | result
+
+// Every value from the API is escaped before it goes into HTML (SOS text is user input).
+const esc = s => String(s ?? "").replace(/[&<>"']/g,
+  c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const csrf = () => (document.cookie.split("; ").find(r => r.startsWith("csrftoken=")) || "").split("=")[1];
+
+async function api(url, options = {}) {
+  const res = await fetch(url, { credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "X-CSRFToken": csrf() }, ...options });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
+  return data;
+}
+
+function ago(iso) {
+  if (!iso) return "";
+  const s = Math.max(0, (Date.now() - new Date(iso)) / 1000);
+  if (s < 60) return `${s | 0}s ago`;
+  if (s < 3600) return `${(s / 60) | 0}m ago`;
+  if (s < 86400) return `${(s / 3600) | 0}h ago`;
+  return new Date(iso).toLocaleString();
+}
+const time = iso => iso ? new Date(iso).toLocaleTimeString() : "";
+
+function toast(text) {
+  const t = document.getElementById("toast");
+  t.textContent = text; t.style.display = "block";
+  clearTimeout(t._h); t._h = setTimeout(() => t.style.display = "none", 3500);
+}
+
+function sevChip(i) {
+  if (i.severity) return `<span class="chip sev-${esc(i.severity)}">${esc(i.severity)}</span>`;
+  return `<span class="chip sev-pending">AI triaging…</span>`;
+}
+function statusChip(i) {
+  const colour = { open: "var(--critical)", escalated: "var(--high)", active: "var(--info)",
+                   resolved: "var(--low)", closed: "var(--muted)" }[i.status] || "var(--muted)";
+  return `<span class="chip" style="color:${colour}">${esc(i.status)}</span>`;
+}
+</script>
+<script>
+function sortIncidents(list) {
+  return [...list].sort((a, b) =>
+    (ACTIVE.includes(b.status) - ACTIVE.includes(a.status)) ||
+    (SEV_ORDER[a.severity || ""] - SEV_ORDER[b.severity || ""]) ||
+    (new Date(b.created_at) - new Date(a.created_at)));
+}
+
+function renderStats() {
+  const count = f => incidents.filter(f).length;
+  document.getElementById("s-open").textContent = count(i => i.status === "open" || i.status === "escalated");
+  document.getElementById("s-critical").textContent = count(i => i.severity === "critical" && ACTIVE.includes(i.status));
+  document.getElementById("s-escalated").textContent = count(i => i.status === "escalated");
+  document.getElementById("s-review").textContent = count(i => i.needs_human_review);
+  document.getElementById("s-active").textContent = count(i => i.status === "active");
+}
+
+function renderList(newIds) {
+  const box = document.getElementById("list");
+  if (!incidents.length) { box.innerHTML = `<div class="empty">No incidents yet. All quiet. 🌙</div>`; return; }
+  box.innerHTML = sortIncidents(incidents).map(i => `
+    <div class="item sev-b-${esc(i.severity)} ${ACTIVE.includes(i.status) ? "" : "closed"}
+                ${i.id === selectedId ? "selected" : ""} ${newIds.has(i.id) ? "flash" : ""}"
+         data-id="${i.id}">
+      <div class="row"><strong>#${i.id} · ${esc(i.category)}</strong>${sevChip(i)}</div>
+      <div class="msg muted">${esc(i.message) || "<em>One-tap SOS (no message)</em>"}</div>
+      <div class="row muted" style="font-size:12px">
+        <span>${esc(i.location)} · ${esc(i.resident_username)}</span>
+        <span>${statusChip(i)} L${i.escalation_level} · ${ago(i.created_at)}</span>
+      </div>
+    </div>`).join("");
+  box.querySelectorAll(".item").forEach(el =>
+    el.addEventListener("click", () => { selectedId = Number(el.dataset.id); render(new Set()); }));
+}
+
+function canAccept(i) {
+  const alerted = i.alerts.some(a => a.recipient_username === ME);
+  return ["open", "escalated"].includes(i.status) && (alerted || IS_STAFF);
+}
+function canResolve(i) {
+  return ACTIVE.includes(i.status) && (i.assigned_responder_username === ME ||
+    i.resident_username === ME || ROLE === "security" || IS_STAFF);
+}
+</script>
+<script>
+function renderFirstAid(i) {
+  const fa = firstAid[i.id];
+  if (!fa) return `<button class="btn" data-act="firstaid">🩺 Show first-aid steps</button>`;
+  if (fa.loading) return `<div class="muted">Finding the right first-aid guide…</div>`;
+  if (fa.error) return `<div class="warn">Could not load first-aid: ${esc(fa.error)}</div>`;
+  const sources = (fa.sources || []).map(s => esc(s.title)).join(", ");
+  return `<ol class="steps">${fa.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
+    ${sources ? `<div class="muted" style="font-size:12px">Source: ${sources}</div>` : ""}
+    <div class="warn">📞 ${esc(fa.emergency)}</div>`;
+}
+
+function renderDetail() {
+  const box = document.getElementById("detail");
+  const i = incidents.find(x => x.id === selectedId);
+  if (!i) { box.innerHTML = `<div class="empty">Select an incident to see details.</div>`; return; }
+
+  const timeline = [`<li><strong>SOS raised</strong> by ${esc(i.resident_username)}
+      <span class="muted">· ${time(i.created_at)}</span></li>`]
+    .concat(i.alerts.map(a => `
+      <li class="${esc(a.status)}">L${a.escalation_level} · ${esc(a.audience)} ·
+        <strong>${esc(a.recipient_username || a.recipient_phone)}</strong> via ${esc(a.channel)}
+        <span class="muted">· ${esc(a.status)} · ${time(a.created_at)}</span></li>`))
+    .concat(i.resolved_at ? [`<li class="accepted"><strong>Resolved</strong>
+      <span class="muted">· ${time(i.resolved_at)}</span></li>`] : []);
+
+  box.innerHTML = `
+    <div class="row"><h2>#${i.id} · ${esc(i.category)}</h2><span>${sevChip(i)} ${statusChip(i)}</span></div>
+    <div class="muted">${esc(i.location)} · resident <strong>${esc(i.resident_username)}</strong>
+      · ${ago(i.created_at)} · escalation level ${i.escalation_level}</div>
+    <div class="quote">${esc(i.message) || "<em class='muted'>One-tap SOS, no message</em>"}</div>
+    ${i.guardian_summary ? `<div class="ai">🤖 <strong>AI triage:</strong> ${esc(i.guardian_summary)}
+      <div class="muted" style="font-size:12px;margin-top:4px">via ${esc(i.triage_source)}
+      · confidence ${i.triage_confidence != null ? Math.round(i.triage_confidence * 100) + "%" : "n/a"}</div></div>`
+      : `<div class="ai muted">🤖 AI triage in progress… (alerts were already sent)</div>`}
+    ${i.injection_suspected ? `<div class="warn">⚠️ The message looked like a prompt-injection attempt. Severity was kept at the safe level.</div>` : ""}
+    ${i.needs_human_review ? `<div class="warn">⚠️ Nobody accepted after all escalation levels: security desk must act.</div>` : ""}
+    ${i.assigned_responder_username ? `<div style="margin-top:10px">✅ <strong>${esc(i.assigned_responder_username)}</strong> is responding</div>` : ""}
+    <div class="actions">
+      ${canAccept(i) ? `<button class="btn btn-ok" data-act="accept">I'm going to help</button>` : ""}
+      ${canAccept(i) ? `<button class="btn" data-act="decline">Can't help</button>` : ""}
+      ${canResolve(i) ? `<button class="btn" data-act="resolve">Mark resolved</button>` : ""}
+    </div>
+    <div class="section"><h3>First aid (RAG)</h3>${renderFirstAid(i)}</div>
+    <div class="section"><h3>Escalation timeline</h3><ul class="timeline">${timeline.join("")}</ul></div>`;
+
+  box.querySelectorAll("[data-act]").forEach(b => b.addEventListener("click", () => act(i.id, b.dataset.act, b)));
+}
+
+function render(newIds) { renderStats(); renderList(newIds); renderDetail(); }
+</script>
+<script>
+async function act(id, action, button) {
+  if (action === "firstaid") {
+    firstAid[id] = { loading: true }; renderDetail();
+    try { firstAid[id] = await api(`/api/incidents/${id}/first-aid/`); }
+    catch (e) { firstAid[id] = { error: e.message }; }
+    renderDetail(); return;
+  }
+  button.disabled = true;
+  try {
+    await api(`/api/incidents/${id}/${action}/`, { method: "POST", body: "{}" });
+    toast({ accept: "You're assigned. Others have been told help is coming.",
+            decline: "Noted. Others are still being alerted.",
+            resolve: "Incident resolved." }[action]);
+  } catch (e) { toast("⚠️ " + e.message); }
+  await refresh();
+}
+
+async function refresh() {
+  try {
+    incidents = await api("/api/incidents/");
+  } catch (e) { toast("⚠️ Connection problem: retrying…"); return; }
+  const newIds = new Set(incidents.filter(i => !seen.has(i.id)).map(i => i.id));
+  if (!firstLoad && newIds.size) toast(`🚨 ${newIds.size} new SOS received`);
+  incidents.forEach(i => seen.add(i.id));
+  if (selectedId === null && incidents.length) selectedId = sortIncidents(incidents)[0].id;
+  render(firstLoad ? new Set() : newIds);
+  firstLoad = false;
+}
+
+const raiseForm = document.getElementById("raise-form");
+if (raiseForm) raiseForm.addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = raiseForm.querySelector("button"); btn.disabled = true;
+  try {
+    const created = await api("/api/incidents/raise/", { method: "POST", body: JSON.stringify({
+      category: document.getElementById("raise-category").value,
+      message: document.getElementById("raise-message").value }) });
+    selectedId = created.id;
+    document.getElementById("raise-message").value = "";
+    toast("🚨 SOS sent. Your guardian, security and volunteers have been alerted.");
+  } catch (err) { toast("⚠️ " + err.message); }
+  btn.disabled = false;
+  await refresh();
+});
+
+refresh();
+setInterval(refresh, 5000);
+</script>
+{% endblock %}
