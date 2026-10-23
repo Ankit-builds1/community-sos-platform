@@ -44,6 +44,8 @@ DEBUG = os.getenv("DJANGO_DEBUG", "1") == "1"
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS",
                                               "localhost,127.0.0.1").split(",") if h.strip()]
+if os.getenv("RENDER_EXTERNAL_HOSTNAME"):  # set automatically by Render
+    ALLOWED_HOSTS.append(os.environ["RENDER_EXTERNAL_HOSTNAME"])
 
 
 # Application definition
@@ -100,13 +102,23 @@ SOS_USE_CELERY = os.getenv("SOS_USE_CELERY", "1") == "1"
 # Tests use an in-memory cache, so test runs never touch real counters.
 RUNNING_TESTS = len(sys.argv) > 1 and sys.argv[1] == "test"
 _REDIS_URL = os.getenv("REDIS_URL", "")
-if _REDIS_URL and not RUNNING_TESTS:
+if RUNNING_TESTS:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+elif _REDIS_URL:
     CACHES = {"default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": _REDIS_URL.rsplit("/", 1)[0] + "/1",
     }}
 else:
-    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+    # No Redis (e.g. Render free + Neon): keep the counters in the database so all
+    # gunicorn threads/workers share them. Table created by `createcachetable`.
+    CACHES = {"default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "django_cache",
+    }}
+
+# Secret for the external cron URL (single-container hosting without Celery beat)
+CRON_SECRET = os.getenv("CRON_SECRET", "")
 
 # Abuse protection for a public demo
 LLM_DAILY_CALL_LIMIT = int(os.getenv("LLM_DAILY_CALL_LIMIT", "150"))  # ~150 x 900 tokens
@@ -137,6 +149,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    'config.middleware.HealthCheckMiddleware',  # must stay first (before host checks)
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # serves admin/API CSS+JS in production
     'django.contrib.sessions.middleware.SessionMiddleware',

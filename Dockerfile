@@ -1,4 +1,4 @@
-# One image for the web server, the Celery worker and Celery beat.
+# One image for every host: Docker Compose (web / worker / beat) and Render (single container).
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -14,6 +14,11 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Then the project code
 COPY . .
+
+# Bake the embedding model + first-aid index into the image, so containers start fast
+# and free hosts don't download ~250 MB on every wake-up. Needs no database or secrets.
+RUN DJANGO_DEBUG=1 python manage.py build_firstaid_index \
+ && DJANGO_DEBUG=1 python manage.py collectstatic --noinput
 
 # Run as a normal user, not root
 RUN useradd --create-home app && mkdir -p /models && chown -R app:app /app /models

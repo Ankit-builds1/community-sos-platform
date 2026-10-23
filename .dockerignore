@@ -8,4 +8,5 @@ __pycache__/
 db.sqlite3
 staticfiles/
 firstaid/index/
+render.yaml
 */eval/results/

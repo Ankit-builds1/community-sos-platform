@@ -17,7 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+from sos.cron import cron, healthz
+
 urlpatterns = [
+    path('healthz', healthz),
+    path('api/internal/cron/', cron),
     path('admin/', admin.site.urls),
     path('api/auth/', include('accounts.urls')),
     path('api/', include('community.urls')),

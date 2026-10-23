@@ -1,0 +1,45 @@
+# Render Blueprint: free single-container deployment (no credit card needed).
+#   Database: Neon free PostgreSQL (set DATABASE_URL in the Render dashboard)
+#   Background triage: in-process thread (SOS_USE_CELERY=0)
+#   Escalations + demo clean-up: cron-job.org calls /api/internal/cron/?token=CRON_SECRET every minute
+services:
+  - type: web
+    name: community-sos
+    runtime: docker
+    plan: free
+    region: singapore              # closest Render region to India
+    healthCheckPath: /healthz
+    envVars:
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true          # Render creates a random secret
+      - key: DJANGO_ALLOWED_HOSTS
+        value: .onrender.com,localhost,127.0.0.1
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        value: https://*.onrender.com
+      - key: DEMO_MODE
+        value: "1"
+      - key: SOS_USE_CELERY
+        value: "0"
+      - key: WEB_CONCURRENCY
+        value: "1"                   # 512 MB RAM: one gunicorn worker (4 threads)
+      - key: LLM_DAILY_CALL_LIMIT
+        value: "150"
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
+      - key: GROQ_FALLBACK_MODEL
+        value: openai/gpt-oss-20b
+      - key: CRON_SECRET
+        generateValue: true
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: admin
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: admin@example.com
+      # Secrets you paste in the dashboard (never committed):
+      - key: DATABASE_URL            # from Neon, ends with ?sslmode=require
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
