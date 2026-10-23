@@ -15,12 +15,20 @@ class AlertSerializer(serializers.ModelSerializer):
 
 class RaiseSOSSerializer(serializers.Serializer):
     """Input for the SOS button. Everything is optional - one tap must always work."""
-    category = serializers.ChoiceField(choices=Incident.Category.choices, default="other")
-    message = serializers.CharField(required=False, allow_blank=True, default="")
+    category = serializers.ChoiceField(choices=Incident.Category.choices, default="other",
+                                       allow_null=True)
+    message = serializers.CharField(required=False, allow_blank=True, allow_null=True,
+                                    default="")
     latitude = serializers.DecimalField(max_digits=9, decimal_places=6, required=False,
                                         allow_null=True, default=None)
     longitude = serializers.DecimalField(max_digits=9, decimal_places=6, required=False,
                                          allow_null=True, default=None)
+
+    def validate(self, attrs):
+        # An SOS must never be rejected over a missing field: null -> safe defaults.
+        attrs["category"] = attrs.get("category") or "other"
+        attrs["message"] = attrs.get("message") or ""
+        return attrs
 
 
 class IncidentSerializer(serializers.ModelSerializer):

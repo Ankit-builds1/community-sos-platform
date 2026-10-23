@@ -71,6 +71,14 @@ class SOSFlowTests(APITestCase):
         response = self.client.post("/api/incidents/raise/", {}, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_null_fields_never_block_an_sos(self):
+        self.client.force_authenticate(self.resident)
+        response = self.client.post("/api/incidents/raise/",
+                                    {"category": None, "message": None,
+                                     "latitude": None, "longitude": None}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["category"], "other")
+
     def test_raise_alerts_primary_guardian_security_and_available_volunteers(self):
         response = self.raise_sos(message="Slipped in bathroom")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
