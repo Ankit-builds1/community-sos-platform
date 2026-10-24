@@ -9,9 +9,11 @@ Results are saved to triage/eval/results/<mode>.json
 import json
 import time
 from pathlib import Path
+from unittest import mock
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
+from triage import student
 from triage.eval.metrics import CATEGORIES, summarise
 from triage.graph import run_triage
 from triage.rules import rule_based_triage
@@ -23,16 +25,24 @@ class Command(BaseCommand):
     help = "Measure triage accuracy, F1, under-triage rate and latency."
 
     def add_arguments(self, parser):
-        parser.add_argument("--mode", choices=["rules", "full"], default="rules")
+        parser.add_argument("--mode", choices=["rules", "student", "offline", "full"],
+                            default="rules",
+                            help="rules = keywords only; student = fine-tuned model only; "
+                                 "offline = agent with the LLM down (student -> rules + "
+                                 "guardrail); full = complete agent with the LLM")
         parser.add_argument("--limit", type=int, default=None)
-        parser.add_argument("--dataset", choices=["dev", "holdout"], default="dev",
+        parser.add_argument("--dataset", choices=["dev", "holdout", "holdout2"], default="dev",
                             help="dev = the 100 cases used for tuning; "
-                                 "holdout = 50 unseen cases for the fair score")
+                                 "holdout = 50 unseen cases for the fair score; "
+                                 "holdout2 = 40 newer cases, frozen before the v3 model")
         parser.add_argument("--sleep", type=float, default=4.0,
                             help="seconds between LLM calls (free-tier rate limits)")
 
     def handle(self, *args, mode, limit, sleep, dataset, **options):
-        filename = "sos_eval.jsonl" if dataset == "dev" else "sos_holdout.jsonl"
+        if mode in ("student", "offline") and not student.available():
+            raise CommandError("No fine-tuned model in triage/finetune/model/ yet.")
+        filename = {"dev": "sos_eval.jsonl", "holdout": "sos_holdout.jsonl",
+                    "holdout2": "sos_holdout2.jsonl"}[dataset]
         lines = (EVAL_DIR / filename).read_text(encoding="utf-8").splitlines()
         cases = [json.loads(line) for line in lines if line.strip()][:limit]
 
@@ -40,6 +50,16 @@ class Command(BaseCommand):
         for i, case in enumerate(cases, 1):
             if mode == "rules":
                 result, llm_ms, errors = rule_based_triage(case["message"]), None, []
+            elif mode == "student":
+                started = time.perf_counter()
+                result = student.predict(case["message"])
+                llm_ms, errors = round((time.perf_counter() - started) * 1000), []
+            elif mode == "offline":
+                with mock.patch("triage.graph.llm_triage",
+                                side_effect=RuntimeError("LLM offline (eval)")):
+                    state = run_triage(case["message"], "other")
+                result, errors = state["final"], []
+                llm_ms = state.get("latency_ms", {}).get("student")
             else:
                 state = run_triage(case["message"], "other")
                 result = state["final"]

@@ -120,6 +120,11 @@ else:
 # Secret for the external cron URL (single-container hosting without Celery beat)
 CRON_SECRET = os.getenv("CRON_SECRET", "")
 
+# Fine-tuned local triage model (fallback when the LLM is down). Off in tests so the
+# existing "LLM fails -> rules" tests stay deterministic; the student has its own tests.
+TRIAGE_STUDENT_ENABLED = (os.getenv("TRIAGE_STUDENT_ENABLED", "1") == "1"
+                          and not RUNNING_TESTS)
+
 # Telegram bot notifications (optional; empty token = disabled)
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "")

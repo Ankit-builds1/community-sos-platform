@@ -10,3 +10,8 @@ staticfiles/
 firstaid/index/
 render.yaml
 */eval/results/
+
+triage/finetune/model/
+triage/finetune/model_v2/
+triage/finetune/data/*.log
+triage/finetune/data/*.err

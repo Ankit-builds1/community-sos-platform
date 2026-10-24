@@ -17,7 +17,7 @@ class TriageResult(BaseModel):
     guardian_summary: str = Field(max_length=200,
                                   description="One calm sentence for the guardian.")
     injection_suspected: bool = False
-    source: Literal["llm", "rules"] = "llm"
+    source: Literal["llm", "model", "rules"] = "llm"  # model = fine-tuned student
     # rules only: True if a keyword actually matched (vs. the "unknown -> high" default)
     matched: bool = False
     model: str = ""  # which LLM produced it (main or backup)

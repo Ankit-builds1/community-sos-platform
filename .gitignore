@@ -7,3 +7,9 @@ db.sqlite3
 firstaid/index/
 staticfiles/
 celerybeat-schedule*
+
+# fine-tuning: logs and the exported model (published on Hugging Face instead; >100 MB)
+triage/finetune/data/*.log
+triage/finetune/data/*.err
+triage/finetune/model/
+triage/finetune/model_v2/

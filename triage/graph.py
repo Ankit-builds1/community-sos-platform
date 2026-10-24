@@ -3,8 +3,10 @@
     START
       -> baseline        rule-based triage (always runs, cheap, never fails)
       -> llm_classify    LLM + Pydantic validation
-      -> confident?  -- no / error --> use_rules
-      |  yes
+      -> confident?  -- no / error --> student (fine-tuned local model)
+      |  yes                              -> confident? -- no / missing --> use_rules
+      |                                   |  yes
+      |  <--------------------------------+
       -> guardrail       final severity = max(LLM, rules); flag injection
       -> END
 
@@ -18,13 +20,14 @@ from typing import Optional, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
-from . import rules
+from . import rules, student
 from .llm import llm_triage
 from .schema import TriageResult
 
 logger = logging.getLogger(__name__)
 
 CONFIDENCE_THRESHOLD = 0.6
+STUDENT_CONFIDENCE_THRESHOLD = 0.5
 
 
 class TriageState(TypedDict, total=False):
@@ -32,6 +35,7 @@ class TriageState(TypedDict, total=False):
     category_hint: str
     baseline: TriageResult
     llm_result: Optional[TriageResult]
+    student_floor: Optional[str]  # severity from an unsure fine-tuned model
     final: TriageResult
     errors: list
     latency_ms: dict
@@ -57,12 +61,37 @@ def llm_node(state: TriageState) -> TriageState:
 def route_after_llm(state: TriageState) -> str:
     result = state.get("llm_result")
     if result is None or result.confidence < CONFIDENCE_THRESHOLD:
-        return "use_rules"
+        return "student"
     return "guardrail"
 
 
+def student_node(state: TriageState) -> TriageState:
+    """Fine-tuned local model: second opinion when the LLM failed or was unsure."""
+    if not student.available():
+        return {"llm_result": None}
+    started = time.perf_counter()
+    try:
+        result = student.predict(state["message"])
+    except Exception as exc:
+        logger.warning("Fine-tuned triage model failed, using rules: %s", exc)
+        return {"llm_result": None, "errors": state["errors"] + [f"student: {exc}"]}
+    latency = {**state["latency_ms"], "student": round((time.perf_counter() - started) * 1000)}
+    if result.confidence < STUDENT_CONFIDENCE_THRESHOLD:
+        # unsure: don't trust its category, but keep its severity as a safety floor
+        return {"llm_result": None, "latency_ms": latency, "student_floor": result.severity}
+    return {"llm_result": result, "latency_ms": latency}
+
+
+def route_after_student(state: TriageState) -> str:
+    return "guardrail" if state.get("llm_result") is not None else "use_rules"
+
+
 def use_rules_node(state: TriageState) -> TriageState:
-    return {"final": state["baseline"]}
+    base = state["baseline"]
+    floor = state.get("student_floor")
+    if floor:  # an unsure model may still RAISE severity, never lower it
+        base = base.model_copy(update={"severity": rules.max_severity(base.severity, floor)})
+    return {"final": base}
 
 
 def guardrail_node(state: TriageState) -> TriageState:
@@ -85,12 +114,15 @@ def build_graph():
     graph = StateGraph(TriageState)
     graph.add_node("baseline", baseline_node)
     graph.add_node("llm_classify", llm_node)
+    graph.add_node("student", student_node)
     graph.add_node("use_rules", use_rules_node)
     graph.add_node("guardrail", guardrail_node)
 
     graph.add_edge(START, "baseline")
     graph.add_edge("baseline", "llm_classify")
     graph.add_conditional_edges("llm_classify", route_after_llm,
+                                {"student": "student", "guardrail": "guardrail"})
+    graph.add_conditional_edges("student", route_after_student,
                                 {"use_rules": "use_rules", "guardrail": "guardrail"})
     graph.add_edge("use_rules", END)
     graph.add_edge("guardrail", END)
