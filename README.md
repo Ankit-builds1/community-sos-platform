@@ -7,6 +7,8 @@
 One tap alerts guardians, security and neighbours in seconds. An AI agent triages the emergency in **English, Hindi or Odia**, unanswered alerts **escalate automatically**, and a RAG assistant gives **grounded first-aid steps** while help is on the way.
 
 [![Live demo](https://img.shields.io/badge/Live_demo-community--sos--07io.onrender.com-ff4d4f?style=for-the-badge)](https://community-sos-07io.onrender.com)
+[![Model on Hugging Face](https://img.shields.io/badge/🤗_Model-sos--triage--minilm-FFD21E?style=for-the-badge)](https://huggingface.co/Ankit-builds/sos-triage-minilm)
+[![Telegram bot](https://img.shields.io/badge/Telegram-@community__sos__ankit__bot-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/community_sos_ankit_bot)
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-6.1-092E20?logo=django&logoColor=white)
@@ -14,6 +16,8 @@ One tap alerts guardians, security and neighbours in seconds. An AI agent triage
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![Celery](https://img.shields.io/badge/Celery-Redis-37814A?logo=celery&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![ONNX](https://img.shields.io/badge/ONNX-int8-005CED?logo=onnx&logoColor=white)
+![Fine-tuned](https://img.shields.io/badge/Fine--tuned-MiniLM_multilingual-8A2BE2)
 [![CI](https://github.com/Ankit-builds1/community-sos-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/Ankit-builds1/community-sos-platform/actions/workflows/ci.yml)
 ![Tests](https://img.shields.io/badge/tests-80_passing-3ecf8e)
 
@@ -24,6 +28,28 @@ One tap alerts guardians, security and neighbours in seconds. An AI agent triage
 </div>
 
 ---
+
+## 🔗 Links
+
+| | |
+|---|---|
+| 🌐 **Live demo** | [community-sos-07io.onrender.com](https://community-sos-07io.onrender.com) (click **⚡ Try it now**, no sign-up) |
+| 🤗 **Fine-tuned model** | [huggingface.co/Ankit-builds/sos-triage-minilm](https://huggingface.co/Ankit-builds/sos-triage-minilm) (int8 ONNX, model card + metrics) |
+| 📲 **Telegram alert bot** | [@community_sos_ankit_bot](https://t.me/community_sos_ankit_bot) (link it from *My circle → Connect Telegram* on the site) |
+| ✅ **CI pipeline** | [GitHub Actions](https://github.com/Ankit-builds1/community-sos-platform/actions/workflows/ci.yml) (80 tests on PostgreSQL + Docker build on every push) |
+| 🧠 **Training script** | [`triage/finetune/train.py`](triage/finetune/train.py) (runs on a free Kaggle T4 in ~5 min) |
+| 🧪 **Distillation dataset** | [`triage/finetune/data/`](triage/finetune/data) (train / val + both frozen holdout sets) |
+| 📊 **Evaluation results** | [`triage/eval/results/`](triage/eval/results) (rules vs v2 vs v3, both holdouts) |
+| 🩺 **First-aid knowledge base** | [`firstaid/knowledge/`](firstaid/knowledge) (14 guides used by the RAG assistant) |
+
+## 🆕 What's new
+
+- **Fine-tuned offline triage model:** LLM → student distillation into a multilingual MiniLM. When the LLM is unavailable, critical-case recall goes from **52% → 96%** (fresh holdout), in **5 ms**, with no API. [Details ↓](#2-fine-tuned-offline-triage-model-llm--student-distillation)
+- **Real notifications:** SOS alerts on your phone through a Telegram bot, plus browser desktop alerts.
+- **Live map:** GPS (if shared) or the society address, with severity pins and directions.
+- **Self-service societies:** register your building, join codes, manager approvals, guardian invite links.
+- **Instant sandbox:** a private 6-person society per visitor, with a role switcher.
+- **CI/CD:** GitHub Actions runs every test on PostgreSQL and builds the Docker image on each push.
 
 ## 🧪 Try it in 30 seconds (no sign-up)
 
@@ -67,6 +93,7 @@ Elderly parents, children and dependents are often alone at home while family me
 | 🤝 | **Responder workflow** | Accept / decline / resolve. **First responder wins** (row-level locking stops two people taking the same incident) |
 | 🏢 | **Self-service onboarding** | Register a society, auto-generated flats, join codes, manager approval, guardian invite links, instant sandbox for visitors |
 | 🤖 | **AI triage agent** | LangGraph agent classifies category + severity and writes a calm summary for the guardian |
+| 🧠 | **Offline fine-tuned model** | A multilingual MiniLM distilled from the LLM takes over when the LLM is down or out of quota: 96% critical recall, 5 ms, no API ([model](https://huggingface.co/Ankit-builds/sos-triage-minilm)) |
 | 🩺 | **RAG first-aid** | Retrieves the right guide and answers **only from it**, with sources and the 108 / 112 line |
 | 📊 | **Live dashboard** | Role-aware incident board, colour-coded severity, escalation timeline, auto-refresh every 5 s |
 | 🛡️ | **Safety by design** | AI runs *after* alerts are sent and can never block or downgrade an emergency |
@@ -89,6 +116,8 @@ Elderly parents, children and dependents are often alone at home while family me
                          ┌──────────────────────────────────────────────┐
                          │ Celery worker (or in-process thread)         │
                          │  LangGraph triage agent ──▶ Groq LLM         │
+                         │     └─ LLM down? ──▶ fine-tuned MiniLM (ONNX)│◀── 🤗 Hugging Face
+                         │                       └─ unsure? ──▶ rules   │    (pulled at build)
                          └──────────────────────────────────────────────┘
   Celery beat / cron ──▶ escalation check every 10–60 s
                          (level 1 → level 2 → level 3 → human review)
@@ -303,6 +332,8 @@ community/    society → tower → flat, guardians, emergency contacts, onboard
 sos/          incidents, alerts, escalation engine, Telegram notifications,
               Celery tasks, cron + webhook endpoints
 triage/       LangGraph agent, rules, LLM client, evaluation sets + command
+  finetune/   distillation pipeline: scenarios, dataset, Kaggle training script,
+              τ tuning; student.py runs the ONNX model in the app
 firstaid/     RAG: guides, chunker, vector store, assistant, evaluation
 dashboard/    landing, sign-up, onboarding, manager & circle pages,
               live incident board with map (templates + vanilla JS)
@@ -320,6 +351,8 @@ docker/       container start-up script
 - [x] PostgreSQL, Celery, Docker, live deployment, web dashboard
 - [x] Self-service societies, join codes, manager approval, guardian invites, instant sandbox
 - [x] Telegram + desktop notifications, live map with GPS, CI pipeline
+- [x] Fine-tuned multilingual triage model (LLM distillation) as an offline fallback, published on Hugging Face
+- [ ] Second LLM provider (e.g. NVIDIA NIM) between Groq and the fine-tuned model
 - [ ] SMS to emergency contacts (MSG91 / Twilio): routed and logged today, provider not connected (paid)
 - [ ] Mobile app with one-tap SOS and background GPS
 - [ ] Voice SOS (Whisper), live chat between responders (WebSockets)
